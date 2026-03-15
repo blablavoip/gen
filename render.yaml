@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: wa-checker
+    env: node
+    plan: starter
+    buildCommand: bash render-build.sh
+    startCommand: node app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "false"
