@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WA Check v17</title>
+<title>WAProof v17</title>
 <script src="/socket.io/socket.io.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/css/flag-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -502,7 +502,29 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .bs-import-banner button{margin-left:auto;height:20px;padding:0 8px;background:rgba(106,27,154,.12);border:1px solid rgba(106,27,154,.3);border-radius:4px;color:var(--p);font-family:var(--font);font-size:9px;font-weight:600;cursor:pointer}
 .bs-import-banner button:hover{background:rgba(106,27,154,.2)}
 
-/* ── SECTION DIVIDER / CARD ── */
+.tb-theme-btn{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.tb-theme-btn:hover{border-color:var(--border3);color:var(--t1);background:var(--s2)}
+
+/* ── DARK THEME ── */
+body.dark{
+  --bg:#080c10;--surface:#0e1318;--s1:#0e1318;--s2:#131920;--s3:#181f28;--s4:#1d2530;
+  --border:#1e2a35;--border2:#26343f;--border3:#2e3f4e;
+  --g:#00e676;--g2:#00c853;--g-bg:rgba(0,230,118,.10);--g-bg2:rgba(0,230,118,.06);--g-border:rgba(0,230,118,.25);
+  --r:#ff4757;--r-bg:rgba(255,71,87,.10);
+  --y:#ffc107;--y-bg:rgba(255,193,7,.08);
+  --b:#2979ff;--b2:#448aff;--b-bg:rgba(41,121,255,.08);
+  --cy:#00bcd4;--cy-bg:rgba(0,188,212,.08);
+  --p:#e040fb;--p-bg:rgba(224,64,251,.07);--biz:#ff9800;
+  --t1:#e8f0f8;--t2:#7a8fa0;--t3:#4a5a6a;--t4:#2a3a4a;
+  --shadow:0 1px 4px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
+  --shadow-md:0 2px 8px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.4);
+}
+body.dark .login-overlay{background:linear-gradient(135deg,#080c10 0%,#0d1520 50%,#08101a 100%)}
+body.dark .login-top{background:linear-gradient(135deg,#0e1318,#111820)}
+body.dark .modal-ftr{background:var(--s2)}
+body.dark .btn-login{box-shadow:0 3px 14px rgba(0,230,118,.2)}
+body.dark .ac-qr-wrap{background:var(--s2)}
 .panel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
@@ -518,7 +540,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
   <div class="login-box">
     <div class="login-top">
       <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg></div>
-      <div class="login-title">WA<span>Check</span></div>
+      <div class="login-title">WA<span>Proof</span></div>
       <div class="login-sub">WhatsApp Validator & Tools — v17</div>
     </div>
     <div class="login-body">
@@ -548,7 +570,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
   <div class="topbar" id="user-bar" style="display:none">
     <div class="tb-brand">
       <div class="tb-logo"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg></div>
-      <span class="tb-name">WA<span>Check</span></span>
+      <span class="tb-name">WA<span>Proof</span></span>
       <span class="tb-version">v17</span>
     </div>
     <div class="tb-user">
@@ -561,6 +583,9 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
       <span class="tb-info">Expires: <strong id="ub-exp">—</strong></span>
     </div>
     <div class="tb-right">
+      <button class="tb-theme-btn" id="tb-theme-btn" onclick="toggleTheme()" title="Toggle dark/light theme">
+        <span class="material-symbols-outlined" id="theme-icon" style="font-size:16px">dark_mode</span>
+      </button>
       <button class="tb-signout" onclick="signOut()">
         <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">logout</span>
         Sign out
@@ -768,7 +793,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
                 <button class="pg-act-btn b" onclick="pgCopyAll()"><span class="material-symbols-outlined" style="font-size:11px">content_copy</span> Copy All</button>
                 <button class="pg-act-btn g" onclick="pgDownloadTxt()"><span class="material-symbols-outlined" style="font-size:11px">download</span> TXT</button>
                 <button class="pg-act-btn g" onclick="pgDownloadCsv()"><span class="material-symbols-outlined" style="font-size:11px">download</span> CSV</button>
-                <button class="pg-act-btn" onclick="pgSendToChecker()" title="Send to WA Checker"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WA Check</button>
+                <button class="pg-act-btn" onclick="pgSendToChecker()" title="Send to WAProof"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WAProof</button>
                 <button class="pg-act-btn r" onclick="pgClear()"><span class="material-symbols-outlined" style="font-size:11px">delete</span> Clear</button>
               </div>
             </div>
@@ -842,7 +867,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
               <div style="display:flex;gap:4px;margin-left:auto">
                 <button class="pg-act-btn b" onclick="cdCopyAll()"><span class="material-symbols-outlined" style="font-size:11px">content_copy</span> Copy All</button>
                 <button class="pg-act-btn g" onclick="cdDownloadCsv()"><span class="material-symbols-outlined" style="font-size:11px">download</span> CSV</button>
-                <button class="pg-act-btn" onclick="cdSendToChecker()"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WA Check</button>
+                <button class="pg-act-btn" onclick="cdSendToChecker()"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WAProof</button>
                 <button class="pg-act-btn r" onclick="cdClear()"><span class="material-symbols-outlined" style="font-size:11px">delete</span> Clear</button>
               </div>
             </div>
@@ -868,13 +893,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
             <div class="bs-section">
               <div class="bs-section-title">Recipients</div>
               <div id="bs-import-banner" class="bs-import-banner" style="display:none">
-                <span>📋 <strong id="bs-import-count">0</strong> numbers from WA Checker</span>
+                <span>📋 <strong id="bs-import-count">0</strong> numbers from WAProof</span>
                 <button onclick="bsClearImport()">✕</button>
               </div>
               <textarea class="bs-textarea bs-num-ta" id="bs-numbers" placeholder="+12025551234&#10;+447911123456&#10;&#10;One number per line" oninput="bsCountNumbers()" style="margin-top:6px"></textarea>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">
                 <span style="font-size:9px;color:var(--t3)" id="bs-num-count">0 numbers</span>
-                <button class="pg-act-btn" onclick="bsImportFromChecker()" style="height:22px;font-size:8px">← From WA Checker</button>
+                <button class="pg-act-btn" onclick="bsImportFromChecker()" style="height:22px;font-size:8px">← From WAProof</button>
               </div>
             </div>
             <div class="bs-scroll">
@@ -947,7 +972,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
                 <div class="bs-label">Filter Recipients</div>
                 <select class="bs-select" id="bs-filter">
                   <option value="all">📋 All numbers in list</option>
-                  <option value="wa_only">✅ WA Checker — valid only</option>
+                  <option value="wa_only">✅ WAProof — valid only</option>
                   <option value="personal">👤 Personal accounts only</option>
                   <option value="business">🏢 Business accounts only</option>
                   <option value="enterprise">🏛 Enterprise only</option>
@@ -1740,7 +1765,7 @@ function cdSendToChecker(){
   if(!cdResults.length){toast('No numbers','err');return;}
   document.getElementById('num-ta').value=cdResults.map(function(r){return r.number;}).join('\n');
   updateCount(); switchTab('checker');
-  toast('Sent '+cdResults.length+' numbers to WA Checker','ok');
+  toast('Sent '+cdResults.length+' numbers to WAProof','ok');
 }
 function cdClear(){
   cdResults=[];
@@ -2000,6 +2025,9 @@ function formatNumber(n,fmt,customPrefix,stripPlus,addSpaces){
   return prefix+raw;
 }
 
+// Session-wide seen set — persists across multiple generates until pgClear()
+var pgSessionSeen = {};
+
 function generateNumbers(){
   var qty=parseInt(document.getElementById('pg-qty').value)||100;
   var type=document.getElementById('pg-num-type').value;
@@ -2009,14 +2037,14 @@ function generateNumbers(){
   var shuffle=document.getElementById('pg-opt-shuffle').classList.contains('on');
   var stripPlus=document.getElementById('pg-opt-leading').classList.contains('on');
   var addSpaces=document.getElementById('pg-opt-spaces').classList.contains('on');
-  var generated=[]; var seen={}; var attempts=0; var maxAttempts=qty*15;
+  var generated=[]; var attempts=0; var maxAttempts=qty*20;
   while(generated.length<qty&&attempts<maxAttempts){
     attempts++;
     var n=genOne(pgSelected,type);
     var formatted=formatNumber(n,fmt,customPrefix,stripPlus,addSpaces);
-    if(unique&&seen[formatted]) continue;
-    seen[formatted]=true;
-    // detect carrier for this number
+    // unique = no dups within this batch; pgSessionSeen = no dups across all generates this session
+    if(unique&&pgSessionSeen[formatted]) continue;
+    pgSessionSeen[formatted]=true;
     var carrierData=getCarrierLocal(n.country.prefix+n.area+n.line);
     generated.push({raw:n,formatted:formatted,type:n.type,carrier:carrierData});
   }
@@ -2026,10 +2054,12 @@ function generateNumbers(){
       var tmp=generated[i];generated[i]=generated[j];generated[j]=tmp;
     }
   }
-  pgGeneratedNumbers=generated;
-  renderPgResults(generated);
-  document.getElementById('pg-count').textContent=generated.length+' numbers';
-  document.getElementById('pg-meta').textContent=pgSelected.prefix+' '+pgSelected.name+' · '+type+' · '+fmt;
+  // Append to existing list (session accumulate) instead of replacing
+  pgGeneratedNumbers=pgGeneratedNumbers.concat(generated);
+  appendPgResults(generated);
+  var total=pgGeneratedNumbers.length;
+  document.getElementById('pg-count').textContent=total+' numbers'+(generated.length<parseInt(document.getElementById('pg-qty').value)?'  ⚠ some dupes skipped':'');
+  document.getElementById('pg-meta').textContent=pgSelected.prefix+' '+pgSelected.name+' · '+type+' · '+fmt+' · session total: '+total;
 }
 
 function renderPgResults(list){
@@ -2050,10 +2080,41 @@ function renderPgResults(list){
       +flagEl
       +'<span class="pg-num-val">'+esc(item.formatted)+'</span>'
       +carrierHtml
-      +'<span style="font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.04);color:'+typeColor+';white-space:nowrap">'+typeIcon+' '+item.type+'</span>'
+      +'<span style="font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.04);color:'+typeColor+';white-space:nowrap">'+typeIcon+' '+item.type+'</span>'
       +'<button class="pg-num-copy" onclick="pgCopyOne(\''+item.formatted.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')" title="Copy">⎘</button>'
       +'</div>';
   }).join('');
+}
+
+// appendPgResults — adds new rows to existing list (session dedup mode)
+function appendPgResults(list){
+  var el=document.getElementById('pg-numbers-list');
+  var empty=document.getElementById('pg-empty');
+  if(empty) empty.style.display='none';
+  if(!list.length){ if(!pgGeneratedNumbers.length) el.innerHTML='<div class="pg-empty"><div class="pg-empty-icon">📱</div><div style="font-size:13px;font-weight:700;color:var(--t2)">No new unique numbers</div><div style="font-size:11px;color:var(--t3)">All generated numbers already exist in session</div></div>'; return; }
+  var typeIcons={mobile:'📱',landline:'☎️',toll_free:'📞',premium:'💎',virtual:'🌐',random:'🎲'};
+  var typeColors={mobile:'var(--g)',landline:'var(--b2)',toll_free:'var(--y)',premium:'var(--p)',virtual:'var(--cy)',random:'var(--t2)'};
+  // If first time, clear the empty placeholder
+  if(pgGeneratedNumbers.length === list.length) el.innerHTML='';
+  var startIdx = pgGeneratedNumbers.length - list.length + 1;
+  var frag = document.createDocumentFragment();
+  list.forEach(function(item,i){
+    var iso=item.raw.country.code;
+    var flagEl='<span class="fi fi-'+iso.toLowerCase()+'" style="font-size:13px;line-height:1"></span>';
+    var carrierHtml='<span style="font-size:9px;color:var(--cy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.carrier?item.carrier.carrier:'—')+'</span>';
+    var typeColor=typeColors[item.type]||'var(--t2)';
+    var typeIcon=typeIcons[item.type]||'📱';
+    var row=document.createElement('div');
+    row.className='pg-num-row';
+    row.innerHTML='<span class="pg-num-idx">'+String(startIdx+i).padStart(3,'0')+'</span>'
+      +flagEl
+      +'<span class="pg-num-val">'+esc(item.formatted)+'</span>'
+      +carrierHtml
+      +'<span style="font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.04);color:'+typeColor+';white-space:nowrap">'+typeIcon+' '+item.type+'</span>'
+      +'<button class="pg-num-copy" onclick="pgCopyOne(\''+item.formatted.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')" title="Copy">⎘</button>';
+    frag.appendChild(row);
+  });
+  el.appendChild(frag);
 }
 
 function pgCopyOne(num){ navigator.clipboard.writeText(num).then(function(){ toast('Copied: '+num,'ok'); }).catch(function(){ toast('Copy failed','err'); }); }
@@ -2087,10 +2148,11 @@ function pgSendToChecker(){
   var nums=pgGeneratedNumbers.map(function(n){return n.formatted.replace(/[^0-9+]/g,'');});
   document.getElementById('num-ta').value=nums.join('\n');
   updateCount(); switchTab('checker');
-  toast('Sent '+nums.length+' numbers to WA Checker','ok');
+  toast('Sent '+nums.length+' numbers to WAProof','ok');
 }
 function pgClear(){
   pgGeneratedNumbers=[];
+  pgSessionSeen={};
   document.getElementById('pg-numbers-list').innerHTML='<div class="pg-empty" id="pg-empty"><div class="pg-empty-icon">📱</div><div style="font-size:13px;font-weight:700;color:var(--t2)">Phone Number Generator</div><div style="font-size:11px;text-align:center;max-width:240px;line-height:1.7;color:var(--t3)">Select a country and click <strong style="color:var(--b2)">Generate Numbers</strong></div></div>';
   document.getElementById('pg-count').textContent='0 numbers';
   document.getElementById('pg-meta').textContent='';
@@ -2119,6 +2181,30 @@ document.getElementById('prof-overlay').addEventListener('click', function(e){ i
 // ─────────────────────────────────────────────────────────────────────────
 // AUTH
 // ─────────────────────────────────────────────────────────────────────────
+// ── THEME TOGGLE ──────────────────────────────────────────────────────────
+var THEME_KEY='waproof_theme';
+function applyTheme(theme){
+  if(theme==='dark'){
+    document.body.classList.add('dark');
+    var ic=document.getElementById('theme-icon');
+    if(ic) ic.textContent='light_mode';
+  } else {
+    document.body.classList.remove('dark');
+    var ic2=document.getElementById('theme-icon');
+    if(ic2) ic2.textContent='dark_mode';
+  }
+}
+function toggleTheme(){
+  var isDark=document.body.classList.contains('dark');
+  var next=isDark?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+}
+// Load saved theme
+(function(){
+  try{var t=localStorage.getItem(THEME_KEY);if(t) applyTheme(t);}catch(e){}
+})();
+
 var SESSION_KEY='wac_session'; var userSession=null;
 function loadSession(){ try{ var s=sessionStorage.getItem(SESSION_KEY); if(s) return JSON.parse(s); }catch{} return null; }
 function saveSession(data){ try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(data));}catch{} }
@@ -2131,9 +2217,9 @@ function showApp(data){
   document.getElementById('ub-bal').textContent=data.user_balance||'—';
   document.getElementById('ub-exp').textContent=data.user_expire||'—';
   var badge=document.getElementById('ub-badge');
-  if(data.user_banned){badge.textContent='Banned';badge.className='user-bar-badge danger';}
-  else if(!data.user_status){badge.textContent='Inactive';badge.className='user-bar-badge warn';}
-  else{badge.textContent='Active';badge.className='user-bar-badge';}
+  if(String(data.user_banned)==='1'){badge.textContent='Banned';badge.className='tb-badge danger';badge.style.display='';}
+  else if(!data.user_status){badge.textContent='Inactive';badge.className='tb-badge warn';badge.style.display='';}
+  else{badge.textContent='Active';badge.className='tb-badge active';badge.style.display='none';}
 }
 function signOut(){
   clearSession(); userSession=null;
@@ -2262,9 +2348,9 @@ function bsPreviewMessage(){
   preview.textContent=useSpintax?bsSpintax(msg):msg;
 }
 
-// ── Import from WA Checker ────────────────────────────────────────────────
+// ── Import from WAProof ────────────────────────────────────────────────
 function bsImportFromChecker(){
-  if(!allResults||!allResults.length){ toast('No WA Checker results yet','err'); return; }
+  if(!allResults||!allResults.length){ toast('No WAProof results yet','err'); return; }
   var filter=document.getElementById('bs-filter').value;
   var filtered=allResults.filter(function(r){
     if(filter==='wa_only') return r.registered;
@@ -2279,7 +2365,7 @@ function bsImportFromChecker(){
   document.getElementById('bs-import-count').textContent=nums.length;
   document.getElementById('bs-import-banner').style.display='flex';
   bsCountNumbers();
-  toast('Imported '+nums.length+' numbers from WA Checker','ok');
+  toast('Imported '+nums.length+' numbers from WAProof','ok');
 }
 function bsClearImport(){
   document.getElementById('bs-numbers').value='';
@@ -2334,7 +2420,7 @@ async function bsStart(){
   var readyAccts=acctState.filter(function(a){return a.state==='ready';});
   if(!readyAccts.length){ toast('No connected WhatsApp accounts','err'); return; }
 
-  // Apply filter from WA Checker data if wa_only/personal/business selected
+  // Apply filter from WAProof data if wa_only/personal/business selected
   var filter=document.getElementById('bs-filter').value;
   var numbers=rawNums;
   if(filter!=='all'){
