@@ -585,6 +585,32 @@ io.on('connection', (socket) => {
   });
 
   socket.on('stop', () => { isChecking = false; io.emit('toast', { msg: 'Stopped', type: 'ok' }); });
+
+  // Bulk sender — single message with account selection
+  socket.on('bs_send_one', async ({ number, message, accountId }, callback) => {
+    // Find account
+    let acc = null;
+    if (accountId) {
+      acc = accounts.get(parseInt(accountId));
+    } else {
+      // fallback: first ready
+      for (const a of accounts.values()) {
+        if (a.state === 'ready' && a.client && !a.dead) { acc = a; break; }
+      }
+    }
+    if (!acc || acc.state !== 'ready' || !acc.client || acc.dead) {
+      if (callback) callback({ ok: false, error: 'Account not ready' });
+      return;
+    }
+    try {
+      const cleaned = number.replace(/\D/g, '').replace(/^0+/, '');
+      if (!cleaned) { if (callback) callback({ ok: false, error: 'Invalid number' }); return; }
+      await acc.client.sendMessage(cleaned + '@c.us', message);
+      if (callback) callback({ ok: true, account: acc.label });
+    } catch (err) {
+      if (callback) callback({ ok: false, error: err.message });
+    }
+  });
 });
 
 // ── Start ──────────────────────────────────────────────────────────────────

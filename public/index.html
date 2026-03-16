@@ -129,6 +129,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .tab-btn[data-tab="phonegen"].active{border-bottom-color:var(--b2);color:var(--t1)}
 .tab-btn[data-tab="carrier"].active .tab-icon{background:rgba(0,188,212,.1);border-color:rgba(0,188,212,.3);color:var(--cy)}
 .tab-btn[data-tab="carrier"].active{border-bottom-color:var(--cy);color:var(--t1)}
+.tab-btn[data-tab="bulksend"].active .tab-icon{background:rgba(224,64,251,.1);border-color:rgba(224,64,251,.3);color:var(--p)}
+.tab-btn[data-tab="bulksend"].active{border-bottom-color:var(--p);color:var(--t1)}
 .tab-panel{display:none;flex:1;flex-direction:column;overflow:hidden;min-width:0}
 .tab-panel.active{display:flex}
 
@@ -394,6 +396,72 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .cd-badge-voip{background:rgba(0,188,212,.07);color:var(--cy);border:1px solid rgba(0,188,212,.18)}
 .cd-badge-toll_free{background:rgba(255,193,7,.07);color:var(--y);border:1px solid rgba(255,193,7,.18)}
 .cd-badge-unknown{background:rgba(255,255,255,.03);color:var(--t3);border:1px solid var(--border)}
+
+/* ── BULK SENDER ── */
+.bs-wrap{flex:1;display:flex;overflow:hidden}
+.bs-left{width:310px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.bs-right{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.bs-section{padding:12px;border-bottom:1px solid var(--border)}
+.bs-section-title{font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.bs-section-title::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--p);display:block}
+.bs-scroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.bs-scroll::-webkit-scrollbar{width:3px}
+.bs-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.bs-field{display:flex;flex-direction:column;gap:4px}
+.bs-label{font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em}
+.bs-select,.bs-input{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-family:var(--font);font-size:10.5px;color:var(--t1);outline:none;width:100%;transition:border-color .15s;-webkit-appearance:none}
+.bs-input{font-family:var(--mono)}
+.bs-select:focus,.bs-input:focus{border-color:rgba(224,64,251,.4)}
+.bs-input::placeholder{color:var(--t3)}
+.bs-textarea{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:11px;color:var(--t1);resize:none;outline:none;width:100%;line-height:1.75;caret-color:var(--p);transition:border-color .15s}
+.bs-textarea:focus{border-color:rgba(224,64,251,.4)}
+.bs-textarea::placeholder{color:var(--t3)}
+.bs-num-ta{height:100px}
+.bs-msg-ta{height:130px}
+.bs-toggle-row{display:flex;gap:5px;flex-wrap:wrap}
+.bs-toggle{padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--t3);font-family:var(--font);font-size:9px;font-weight:600;cursor:pointer;transition:all .12s}
+.bs-toggle:hover{border-color:var(--border2);color:var(--t2)}
+.bs-toggle.on{border-color:rgba(224,64,251,.4);color:var(--p);background:rgba(224,64,251,.07)}
+.bs-range-row{display:flex;align-items:center;gap:7px}
+.bs-range{flex:1;accent-color:var(--p);cursor:pointer}
+.bs-range-val{font-family:var(--mono);font-size:10px;color:var(--p);min-width:34px;text-align:right;font-weight:600}
+.bs-send-btn{width:100%;height:36px;background:linear-gradient(135deg,#9c27b0,var(--p));border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 12px rgba(224,64,251,.3)}
+.bs-send-btn:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(224,64,251,.4)}
+.bs-send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.bs-stop-btn{width:100%;height:36px;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:8px;color:var(--r);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:5px}
+.bs-stop-btn.show{display:flex}
+.bs-stop-btn:hover{background:rgba(255,71,87,.15)}
+/* Right panel */
+.bs-kpi-row{display:flex;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.bs-kpi{flex:1;padding:9px 10px;text-align:center;border-right:1px solid var(--border)}
+.bs-kpi:last-child{border-right:none}
+.bs-kpi-n{font-size:18px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.bs-kpi-l{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.bs-prog-row{padding:6px 12px;border-bottom:1px solid var(--border);display:none;background:var(--s1);flex-shrink:0}
+.bs-prog-row.show{display:block}
+.bs-prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px}
+.bs-prog-fill{height:100%;background:linear-gradient(90deg,#9c27b0,var(--p),var(--g));background-size:200% 100%;border-radius:2px;width:0%;transition:width .3s ease;animation:bsShimmer 2s linear infinite}
+@keyframes bsShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.bs-results-hdr{display:flex;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;flex-wrap:wrap}
+.bs-log{flex:1;overflow-y:auto;font-family:var(--mono);padding:6px 0}
+.bs-log::-webkit-scrollbar{width:3px}
+.bs-log::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.bs-log-row{display:grid;grid-template-columns:34px 22px 1fr 90px 100px 90px 110px 80px;gap:6px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);animation:fade-in .15s ease;transition:background .1s}
+.bs-log-row:hover{background:var(--s2)}
+.bs-log-head{display:grid;grid-template-columns:34px 22px 1fr 90px 100px 90px 110px 80px;gap:6px;align-items:center;padding:5px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--s1);z-index:2}
+.bs-status-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:100px;font-size:9px;font-weight:600;white-space:nowrap}
+.bs-status-sent{background:rgba(0,230,118,.08);color:var(--g);border:1px solid rgba(0,230,118,.2)}
+.bs-status-fail{background:rgba(255,71,87,.08);color:var(--r);border:1px solid rgba(255,71,87,.2)}
+.bs-status-wait{background:rgba(255,193,7,.07);color:var(--y);border:1px solid rgba(255,193,7,.18);animation:pulse 1.2s infinite}
+.bs-status-skip{background:rgba(255,255,255,.04);color:var(--t3);border:1px solid var(--border)}
+.bs-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:11px;color:var(--t3)}
+/* Spintax preview */
+.bs-preview-box{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:10px;color:var(--t2);line-height:1.6;min-height:36px;font-style:italic;border-left:2px solid rgba(224,64,251,.4)}
+/* Import results banner */
+.bs-import-banner{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(224,64,251,.06);border:1px solid rgba(224,64,251,.2);border-radius:7px;font-size:10px;color:var(--p)}
+.bs-import-banner strong{font-weight:700}
+.bs-import-banner button{margin-left:auto;height:20px;padding:0 8px;background:rgba(224,64,251,.12);border:1px solid rgba(224,64,251,.3);border-radius:4px;color:var(--p);font-family:var(--font);font-size:9px;font-weight:600;cursor:pointer}
+.bs-import-banner button:hover{background:rgba(224,64,251,.22)}
 </style>
 </head>
 <body>
@@ -488,6 +556,10 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
         <button class="tab-btn" id="tab-carrier" data-tab="carrier" onclick="switchTab('carrier')">
           <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1.42 9a16 16 0 0121.16 0M5 12.55a11 11 0 0114.08 0M10.5 16.1a6 6 0 013.04 0M12 20h.01"/></svg></div>
           Carrier Detect
+        </button>
+        <button class="tab-btn" id="tab-bulksend" data-tab="bulksend" onclick="switchTab('bulksend')">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          Bulk Sender
         </button>
       </div>
 
@@ -714,6 +786,176 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
           </div>
         </div>
       </div>
+
+      <!-- ── BULK SENDER TAB ── -->
+      <div class="tab-panel" id="panel-bulksend">
+        <div class="bs-wrap">
+
+          <!-- LEFT: Config -->
+          <div class="bs-left">
+            <div class="bs-section">
+              <div class="bs-section-title">Recipients</div>
+              <div id="bs-import-banner" class="bs-import-banner" style="display:none">
+                <span>📋 <strong id="bs-import-count">0</strong> numbers from WA Checker</span>
+                <button onclick="bsClearImport()">✕</button>
+              </div>
+              <textarea class="bs-textarea bs-num-ta" id="bs-numbers" placeholder="+12025551234&#10;+447911123456&#10;+33612345678&#10;&#10;One number per line" oninput="bsCountNumbers()" style="margin-top:6px"></textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                <span style="font-size:9px;color:var(--t3)" id="bs-num-count">0 numbers</span>
+                <button class="pg-act-btn" onclick="bsImportFromChecker()" style="height:20px;font-size:8px">← From WA Checker</button>
+              </div>
+            </div>
+            <div class="bs-scroll">
+
+              <!-- Message -->
+              <div class="bs-field">
+                <div class="bs-label">Message <span style="color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0">· {spintax} supported</span></div>
+                <textarea class="bs-textarea bs-msg-ta" id="bs-message" placeholder="Hello {friend|buddy|there}!&#10;&#10;Your message here...&#10;&#10;Spintax: {opt1|opt2|opt3}&#10;Variables: {name} {number}" oninput="bsPreviewMessage()"></textarea>
+                <div class="bs-preview-box" id="bs-msg-preview">Type a message above to preview…</div>
+              </div>
+
+              <!-- Account selection -->
+              <div class="bs-field">
+                <div class="bs-label">Account Selection</div>
+                <select class="bs-select" id="bs-account-mode" onchange="bsAccountModeChange()">
+                  <option value="auto">🔄 Auto-rotate all ready accounts</option>
+                  <option value="first">1️⃣ Use first ready account only</option>
+                  <option value="specific">🎯 Use specific account</option>
+                </select>
+                <select class="bs-select" id="bs-account-id" style="display:none;margin-top:5px">
+                  <option value="1">Account 1</option><option value="2">Account 2</option>
+                  <option value="3">Account 3</option><option value="4">Account 4</option>
+                  <option value="5">Account 5</option>
+                </select>
+              </div>
+
+              <!-- Delay -->
+              <div class="bs-field">
+                <div class="bs-label">Delay between messages: <span id="bs-delay-val" style="color:var(--p);font-family:var(--mono);font-weight:700">3s</span></div>
+                <div class="bs-range-row">
+                  <input type="range" class="bs-range" id="bs-delay" min="1" max="60" value="3" oninput="bsUpdateDelay(this.value)">
+                  <span class="bs-range-val" id="bs-delay-disp">3s</span>
+                </div>
+              </div>
+
+              <!-- Jitter -->
+              <div class="bs-field">
+                <div class="bs-label">Random jitter ±<span id="bs-jitter-val" style="color:var(--p);font-family:var(--mono);font-weight:700">0s</span></div>
+                <div class="bs-range-row">
+                  <input type="range" class="bs-range" id="bs-jitter" min="0" max="30" value="0" oninput="bsUpdateJitter(this.value)">
+                  <span class="bs-range-val" id="bs-jitter-disp">0s</span>
+                </div>
+                <div style="font-size:9px;color:var(--t3)">Randomizes delay to avoid detection patterns</div>
+              </div>
+
+              <!-- Batch pause -->
+              <div class="bs-field">
+                <div class="bs-label">Batch pause every <span id="bs-batch-n-val" style="color:var(--p);font-family:var(--mono);font-weight:700">Off</span> messages</div>
+                <div class="bs-range-row">
+                  <input type="range" class="bs-range" id="bs-batch-n" min="0" max="100" value="0" step="5" oninput="bsUpdateBatch(this.value)">
+                  <span class="bs-range-val" id="bs-batch-n-disp">Off</span>
+                </div>
+              </div>
+              <div class="bs-field" id="bs-batch-pause-field" style="display:none">
+                <div class="bs-label">Pause duration: <span id="bs-batch-pause-val" style="color:var(--p);font-family:var(--mono);font-weight:700">60s</span></div>
+                <div class="bs-range-row">
+                  <input type="range" class="bs-range" id="bs-batch-pause" min="5" max="600" value="60" step="5" oninput="bsUpdateBatchPause(this.value)">
+                  <span class="bs-range-val" id="bs-batch-pause-disp">60s</span>
+                </div>
+              </div>
+
+              <!-- Rotate every N -->
+              <div class="bs-field" id="bs-rotate-field">
+                <div class="bs-label">Rotate account every <span id="bs-rotate-n-val" style="color:var(--p);font-family:var(--mono);font-weight:700">10</span> messages</div>
+                <div class="bs-range-row">
+                  <input type="range" class="bs-range" id="bs-rotate-n" min="1" max="50" value="10" oninput="bsUpdateRotate(this.value)">
+                  <span class="bs-range-val" id="bs-rotate-n-disp">10</span>
+                </div>
+              </div>
+
+              <!-- Anti-ban toggles -->
+              <div class="bs-field">
+                <div class="bs-label">Anti-Ban Options</div>
+                <div class="bs-toggle-row">
+                  <button class="bs-toggle on" id="bs-opt-shuffle" onclick="toggleBsOpt(this)">Shuffle order</button>
+                  <button class="bs-toggle on" id="bs-opt-spintax" onclick="toggleBsOpt(this)">Spintax</button>
+                  <button class="bs-toggle on" id="bs-opt-rotate" onclick="toggleBsOpt(this)">Rotate accounts</button>
+                  <button class="bs-toggle" id="bs-opt-typing" onclick="toggleBsOpt(this)">Typing indicator</button>
+                  <button class="bs-toggle" id="bs-opt-skip-offline" onclick="toggleBsOpt(this)">Skip offline accts</button>
+                  <button class="bs-toggle" id="bs-opt-wa-only" onclick="toggleBsOpt(this)">WA verified only</button>
+                </div>
+              </div>
+
+              <!-- Filter by type -->
+              <div class="bs-field">
+                <div class="bs-label">Filter recipients</div>
+                <select class="bs-select" id="bs-filter">
+                  <option value="all">📋 All numbers in list</option>
+                  <option value="wa_only">✅ WA Checker — valid only</option>
+                  <option value="personal">👤 Personal accounts only</option>
+                  <option value="business">🏢 Business accounts only</option>
+                  <option value="enterprise">🏛 Enterprise only</option>
+                </select>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px">
+                <button class="bs-send-btn" id="bs-send-btn" onclick="bsStart()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Start Sending
+                </button>
+                <button class="bs-stop-btn" id="bs-stop-btn" onclick="bsStop()">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg> Stop
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- RIGHT: Live log -->
+          <div class="bs-right">
+            <div class="bs-kpi-row">
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--b2)" id="bs-k-total">0</div><div class="bs-kpi-l">Total</div></div>
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--g)" id="bs-k-sent">0</div><div class="bs-kpi-l">Sent</div></div>
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--r)" id="bs-k-fail">0</div><div class="bs-kpi-l">Failed</div></div>
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--y)" id="bs-k-skip">0</div><div class="bs-kpi-l">Skipped</div></div>
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--p)" id="bs-k-remain">—</div><div class="bs-kpi-l">Remaining</div></div>
+              <div class="bs-kpi"><div class="bs-kpi-n" style="color:var(--t2);font-size:12px" id="bs-k-eta">—</div><div class="bs-kpi-l">ETA</div></div>
+            </div>
+            <div class="bs-prog-row" id="bs-prog-row">
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);font-family:var(--mono)"><span id="bs-prog-txt">Sending…</span><span id="bs-prog-pct">0%</span></div>
+              <div class="bs-prog-track"><div class="bs-prog-fill" id="bs-prog-fill"></div></div>
+            </div>
+            <div class="bs-results-hdr">
+              <span style="font-size:11px;font-weight:700;color:var(--t1)" id="bs-res-count">0 sent</span>
+              <span style="font-size:9px;color:var(--t3);margin-left:8px" id="bs-account-info"></span>
+              <div style="display:flex;gap:4px;margin-left:auto">
+                <button class="pg-act-btn g" onclick="bsDownloadCsv()"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+                <button class="pg-act-btn b" onclick="bsCopyFailed()"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Failed</button>
+                <button class="pg-act-btn r" onclick="bsClearLog()"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg> Clear</button>
+              </div>
+            </div>
+            <div class="bs-log-head">
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">#</div>
+              <div style="font-size:8px;color:var(--t3)">🏳</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">Number</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">WA Type</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">Carrier</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">WA Status</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">Account</div>
+              <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em">Result</div>
+            </div>
+            <div class="bs-log" id="bs-log">
+              <div class="bs-empty" id="bs-empty">
+                <div class="pg-empty-icon">✉️</div>
+                <div style="font-size:13px;font-weight:700;color:var(--t2)">Bulk Message Sender</div>
+                <div style="font-size:11px;text-align:center;max-width:280px;line-height:1.7;color:var(--t3)">Add numbers, write your message,<br>configure anti-ban options and click<br><strong style="color:var(--p)">Start Sending</strong></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- end panel-bulksend -->
 
     </main>
   </div>
@@ -1906,6 +2148,383 @@ document.getElementById('btn-login').addEventListener('click',doLogin);
 renderCountryGrid();
 selectCountry('US');
 updateCount();
+
+// ─────────────────────────────────────────────────────────────────────────
+// BULK SENDER
+// ─────────────────────────────────────────────────────────────────────────
+
+var bsLog        = [];   // full log of all sends
+var bsRunning    = false;
+var bsAbort      = false;
+var bsRrIndex    = 0;    // round-robin account pointer
+var bsSentInBatch = 0;   // counter for batch pause
+var bsSentOnAcct  = 0;   // counter for account rotation
+
+// ── UI helpers ────────────────────────────────────────────────────────────
+function bsUpdateDelay(v){
+  document.getElementById('bs-delay-val').textContent=v+'s';
+  document.getElementById('bs-delay-disp').textContent=v+'s';
+}
+function bsUpdateJitter(v){
+  document.getElementById('bs-jitter-val').textContent=v+'s';
+  document.getElementById('bs-jitter-disp').textContent=v+'s';
+}
+function bsUpdateBatch(v){
+  var n=parseInt(v);
+  var label=n===0?'Off':String(n);
+  document.getElementById('bs-batch-n-val').textContent=label;
+  document.getElementById('bs-batch-n-disp').textContent=label;
+  document.getElementById('bs-batch-pause-field').style.display=n>0?'flex':'none';
+}
+function bsUpdateBatchPause(v){
+  var label=v>=60?Math.round(v/60)+'m ':''+(v%60>0?v%60+'s':'');
+  document.getElementById('bs-batch-pause-val').textContent=v+'s';
+  document.getElementById('bs-batch-pause-disp').textContent=v+'s';
+}
+function bsUpdateRotate(v){
+  document.getElementById('bs-rotate-n-val').textContent=v;
+  document.getElementById('bs-rotate-n-disp').textContent=v;
+}
+function toggleBsOpt(btn){ btn.classList.toggle('on'); }
+function bsAccountModeChange(){
+  var m=document.getElementById('bs-account-mode').value;
+  document.getElementById('bs-account-id').style.display=m==='specific'?'block':'none';
+  document.getElementById('bs-rotate-field').style.display=m==='auto'?'flex':'none';
+}
+function bsCountNumbers(){
+  var n=document.getElementById('bs-numbers').value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;}).length;
+  document.getElementById('bs-num-count').textContent=n+' number'+(n!==1?'s':'');
+}
+
+// ── Spintax engine ────────────────────────────────────────────────────────
+function bsSpintax(template){
+  // Recursively resolve {opt1|opt2|opt3} — picks one random option each time
+  return template.replace(/\{([^{}]+)\}/g, function(_,opts){
+    var choices=opts.split('|');
+    return bsSpintax(choices[Math.floor(Math.random()*choices.length)]);
+  });
+}
+
+function bsPreviewMessage(){
+  var msg=document.getElementById('bs-message').value;
+  var preview=document.getElementById('bs-msg-preview');
+  if(!msg.trim()){ preview.textContent='Type a message above to preview…'; return; }
+  var useSpintax=document.getElementById('bs-opt-spintax').classList.contains('on');
+  preview.textContent=useSpintax?bsSpintax(msg):msg;
+}
+
+// ── Import from WA Checker ────────────────────────────────────────────────
+function bsImportFromChecker(){
+  if(!allResults||!allResults.length){ toast('No WA Checker results yet','err'); return; }
+  var filter=document.getElementById('bs-filter').value;
+  var filtered=allResults.filter(function(r){
+    if(filter==='wa_only') return r.registered;
+    if(filter==='personal') return r.registered&&r.accountType==='personal';
+    if(filter==='business') return r.registered&&r.accountType==='business';
+    if(filter==='enterprise') return r.registered&&r.accountType==='enterprise';
+    return r.e164||r.number;
+  });
+  var nums=filtered.map(function(r){return r.e164||r.number;}).filter(Boolean);
+  if(!nums.length){ toast('No numbers match the current filter','err'); return; }
+  document.getElementById('bs-numbers').value=nums.join('\n');
+  document.getElementById('bs-import-count').textContent=nums.length;
+  document.getElementById('bs-import-banner').style.display='flex';
+  bsCountNumbers();
+  toast('Imported '+nums.length+' numbers from WA Checker','ok');
+}
+function bsClearImport(){
+  document.getElementById('bs-numbers').value='';
+  document.getElementById('bs-import-banner').style.display='none';
+  bsCountNumbers();
+}
+
+// ── ETA formatter ─────────────────────────────────────────────────────────
+function bsFormatEta(seconds){
+  if(seconds<60) return Math.round(seconds)+'s';
+  if(seconds<3600) return Math.round(seconds/60)+'m';
+  return Math.round(seconds/3600)+'h '+Math.round((seconds%3600)/60)+'m';
+}
+
+// ── Get next account (round-robin or specific) ────────────────────────────
+function bsGetAccount(){
+  var mode=document.getElementById('bs-account-mode').value;
+  var skipOffline=document.getElementById('bs-opt-skip-offline').classList.contains('on');
+
+  if(mode==='specific'){
+    var specificId=parseInt(document.getElementById('bs-account-id').value);
+    var acc=acctState.find(function(a){return a.id===specificId;});
+    return (acc&&acc.state==='ready')?acc:null;
+  }
+
+  if(mode==='first'){
+    return acctState.find(function(a){return a.state==='ready';})||null;
+  }
+
+  // auto rotate
+  var ready=acctState.filter(function(a){
+    if(a.state!=='ready') return false;
+    if(skipOffline&&a.state!=='ready') return false;
+    return true;
+  });
+  if(!ready.length) return null;
+  var acc=ready[bsRrIndex%ready.length];
+  return acc||null;
+}
+
+// ── Start sending ─────────────────────────────────────────────────────────
+async function bsStart(){
+  if(bsRunning){ toast('Already running','err'); return; }
+
+  var rawNums=document.getElementById('bs-numbers').value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  if(!rawNums.length){ toast('Enter at least one number','err'); return; }
+
+  var msgTemplate=document.getElementById('bs-message').value.trim();
+  if(!msgTemplate){ toast('Enter a message','err'); return; }
+
+  // Check at least one account ready
+  var readyAccts=acctState.filter(function(a){return a.state==='ready';});
+  if(!readyAccts.length){ toast('No connected WhatsApp accounts','err'); return; }
+
+  // Apply filter from WA Checker data if wa_only/personal/business selected
+  var filter=document.getElementById('bs-filter').value;
+  var numbers=rawNums;
+  if(filter!=='all'){
+    // Try to cross-reference with allResults
+    var checkedMap={};
+    allResults.forEach(function(r){ if(r.e164||r.number) checkedMap[r.e164||r.number]=r; });
+    numbers=rawNums.filter(function(n){
+      var r=checkedMap[n];
+      if(!r) return filter==='all'; // not in checker results → include only for 'all'
+      if(filter==='wa_only') return r.registered;
+      if(filter==='personal') return r.registered&&r.accountType==='personal';
+      if(filter==='business') return r.registered&&r.accountType==='business';
+      if(filter==='enterprise') return r.registered&&r.accountType==='enterprise';
+      return true;
+    });
+    var skippedByFilter=rawNums.length-numbers.length;
+    if(skippedByFilter>0) toast('Filtered out '+skippedByFilter+' numbers by type','warn');
+  }
+
+  if(!numbers.length){ toast('No numbers left after filter','err'); return; }
+
+  // Shuffle
+  if(document.getElementById('bs-opt-shuffle').classList.contains('on')){
+    for(var i=numbers.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var tmp=numbers[i]; numbers[i]=numbers[j]; numbers[j]=tmp;
+    }
+  }
+
+  var useSpintax  = document.getElementById('bs-opt-spintax').classList.contains('on');
+  var useRotate   = document.getElementById('bs-opt-rotate').classList.contains('on') && document.getElementById('bs-account-mode').value==='auto';
+  var delayMs     = parseInt(document.getElementById('bs-delay').value)*1000;
+  var jitterMs    = parseInt(document.getElementById('bs-jitter').value)*1000;
+  var batchN      = parseInt(document.getElementById('bs-batch-n').value)||0;
+  var batchPause  = parseInt(document.getElementById('bs-batch-pause').value)*1000||60000;
+  var rotateN     = parseInt(document.getElementById('bs-rotate-n').value)||10;
+
+  // Reset state
+  bsLog=[]; bsAbort=false; bsRunning=true;
+  bsRrIndex=0; bsSentInBatch=0; bsSentOnAcct=0;
+  document.getElementById('bs-log').innerHTML='';
+  document.getElementById('bs-empty') && (document.getElementById('bs-empty').style.display='none');
+  document.getElementById('bs-send-btn').disabled=true;
+  document.getElementById('bs-stop-btn').classList.add('show');
+  document.getElementById('bs-prog-row').classList.add('show');
+
+  var kpis={total:numbers.length, sent:0, fail:0, skip:0};
+  bsUpdateKpis(kpis);
+  document.getElementById('bs-k-remain').textContent=numbers.length;
+
+  var startTime=Date.now();
+
+  for(var i=0;i<numbers.length;i++){
+    if(bsAbort) break;
+
+    var num=numbers[i];
+    var pct=Math.round((i+1)/numbers.length*100);
+    document.getElementById('bs-prog-txt').textContent='Sending '+(i+1)+' / '+numbers.length;
+    document.getElementById('bs-prog-pct').textContent=pct+'%';
+    document.getElementById('bs-prog-fill').style.width=pct+'%';
+
+    // Rotate account?
+    if(useRotate && bsSentOnAcct>=rotateN && i>0){
+      bsRrIndex++;
+      bsSentOnAcct=0;
+    }
+
+    var acc=bsGetAccount();
+    if(!acc){
+      // No account available — log as skip
+      var skipEntry={number:num,status:'skip',reason:'No ready account',account:'—',time:new Date().toISOString()};
+      bsLog.push(skipEntry); kpis.skip++;
+      bsRenderLogRow(skipEntry,i+1);
+      bsUpdateKpis(kpis);
+      continue;
+    }
+
+    // Build message (spintax, variable substitution)
+    var msg=useSpintax?bsSpintax(msgTemplate):msgTemplate;
+    // Replace variables
+    var contactData=allResults.find(function(r){return (r.e164||r.number)===num;})||{};
+    msg=msg.replace(/\{name\}/g, contactData.name||'');
+    msg=msg.replace(/\{number\}/g, num);
+    msg=msg.replace(/\{status\}/g, contactData.status||'');
+
+    // Send
+    var logEntry={
+      number:num, status:'wait', account:acc.label,
+      country:contactData.country||getIsoFromNumber(num)||null,
+      accountType:contactData.accountType||null,
+      carrier:getCarrierLocal(num),
+      waStatus:contactData.status||null,
+      time:new Date().toISOString()
+    };
+    bsLog.push(logEntry);
+    bsRenderLogRow(logEntry, i+1);
+
+    try{
+      await new Promise(function(resolve,reject){
+        var msgTimeout=setTimeout(function(){ reject(new Error('Timeout')); }, 30000);
+        socket.emit('bs_send_one', {number:num, message:msg, accountId:acc.id}, function(result){
+          clearTimeout(msgTimeout);
+          if(result&&result.ok) resolve(result); else reject(new Error(result&&result.error||'Failed'));
+        });
+      });
+      logEntry.status='sent';
+      kpis.sent++;
+      bsSentInBatch++;
+      bsSentOnAcct++;
+    }catch(e){
+      logEntry.status='fail';
+      logEntry.reason=e.message;
+      kpis.fail++;
+    }
+
+    // Update log row
+    bsUpdateLogRow(logEntry, i+1);
+    bsUpdateKpis(kpis);
+    document.getElementById('bs-k-remain').textContent=Math.max(0,numbers.length-(i+1));
+
+    // ETA calculation
+    var elapsed=(Date.now()-startTime)/1000;
+    var avgPerMsg=elapsed/(i+1);
+    var remaining=numbers.length-(i+1);
+    var etaSec=remaining*avgPerMsg;
+    document.getElementById('bs-k-eta').textContent=remaining>0?bsFormatEta(etaSec):'Done';
+    document.getElementById('bs-account-info').textContent='via '+acc.label+(useRotate?' · rotates every '+rotateN:'');
+    document.getElementById('bs-res-count').textContent=kpis.sent+' sent · '+kpis.fail+' failed';
+
+    // Batch pause check
+    if(batchN>0 && bsSentInBatch>=batchN && i<numbers.length-1){
+      bsSentInBatch=0;
+      var pauseMsg='⏸ Batch pause: '+batchPause/1000+'s…';
+      document.getElementById('bs-prog-txt').textContent=pauseMsg;
+      toast(pauseMsg,'warn');
+      await bsSleep(batchPause);
+    }else if(i<numbers.length-1 && !bsAbort){
+      // Normal delay + jitter
+      var actualDelay=delayMs+(jitterMs>0?Math.floor(Math.random()*jitterMs*2)-jitterMs:0);
+      actualDelay=Math.max(500,actualDelay);
+      await bsSleep(actualDelay);
+    }
+  }
+
+  bsRunning=false;
+  document.getElementById('bs-send-btn').disabled=false;
+  document.getElementById('bs-stop-btn').classList.remove('show');
+  document.getElementById('bs-prog-row').classList.remove('show');
+  document.getElementById('bs-k-remain').textContent=0;
+  document.getElementById('bs-k-eta').textContent='—';
+
+  var summary='Done: '+kpis.sent+' sent, '+kpis.fail+' failed, '+kpis.skip+' skipped';
+  toast(summary, kpis.fail>0?'warn':'ok');
+}
+
+function bsSleep(ms){
+  return new Promise(function(r){ setTimeout(r,ms); });
+}
+
+function bsStop(){
+  bsAbort=true; bsRunning=false;
+  document.getElementById('bs-send-btn').disabled=false;
+  document.getElementById('bs-stop-btn').classList.remove('show');
+  document.getElementById('bs-prog-row').classList.remove('show');
+  toast('Stopped','warn');
+}
+
+// ── KPI update ────────────────────────────────────────────────────────────
+function bsUpdateKpis(k){
+  document.getElementById('bs-k-total').textContent=k.total;
+  document.getElementById('bs-k-sent').textContent=k.sent;
+  document.getElementById('bs-k-fail').textContent=k.fail;
+  document.getElementById('bs-k-skip').textContent=k.skip;
+}
+
+// ── Log row render ────────────────────────────────────────────────────────
+function bsRenderLogRow(entry, idx){
+  var el=document.getElementById('bs-log');
+  var row=document.createElement('div');
+  row.className='bs-log-row';
+  row.id='bs-row-'+idx;
+  el.appendChild(row);
+  bsFillRow(row, entry, idx);
+  row.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function bsUpdateLogRow(entry, idx){
+  var row=document.getElementById('bs-row-'+idx);
+  if(row) bsFillRow(row, entry, idx);
+}
+function bsFillRow(row, entry, idx){
+  var flagHtml=entry.country?'<span class="fi fi-'+entry.country.toLowerCase()+'" style="font-size:13px"></span>':'—';
+  var typeMap={personal:'👤 Personal',business:'🏢 Business',enterprise:'🏛 Enterprise'};
+  var typeHtml=entry.accountType?typeMap[entry.accountType]||entry.accountType:'<span style="color:var(--t3)">—</span>';
+  var carrierHtml=entry.carrier?'<span style="font-size:9px;color:var(--cy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(entry.carrier.carrier)+'</span>':'<span style="color:var(--t3)">—</span>';
+  var waStatusHtml=entry.waStatus?'<span style="font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(entry.waStatus)+'">'+esc(entry.waStatus.slice(0,18))+(entry.waStatus.length>18?'…':'')+'</span>':'<span style="color:var(--t3)">—</span>';
+  var statusClass=entry.status==='sent'?'bs-status-sent':entry.status==='fail'?'bs-status-fail':entry.status==='wait'?'bs-status-wait':'bs-status-skip';
+  var statusLabel=entry.status==='sent'?'✓ Sent':entry.status==='fail'?'✕ '+(entry.reason||'Failed'):entry.status==='wait'?'⏳ Sending…':'⊘ Skip';
+  row.innerHTML=
+    '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
+    +flagHtml
+    +'<span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(entry.number)+'</span>'
+    +'<span style="font-size:9px;color:var(--t2)">'+typeHtml+'</span>'
+    +carrierHtml
+    +waStatusHtml
+    +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(entry.account)+'</span>'
+    +'<span class="bs-status-chip '+statusClass+'">'+statusLabel+'</span>';
+}
+
+// ── Export / copy ─────────────────────────────────────────────────────────
+function bsDownloadCsv(){
+  if(!bsLog.length){toast('No log data','err');return;}
+  var rows=['number,status,reason,account,country,type,carrier,wa_status,time'];
+  bsLog.forEach(function(e){
+    rows.push([e.number,e.status,e.reason||'',e.account,e.country||'',e.accountType||'',e.carrier?e.carrier.carrier:'',e.waStatus||'',e.time].map(function(v){return '"'+(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bulk_send_'+Date.now()+'.csv';a.click();
+  toast('Downloaded CSV','ok');
+}
+function bsCopyFailed(){
+  var failed=bsLog.filter(function(e){return e.status==='fail'||e.status==='skip';}).map(function(e){return e.number;});
+  if(!failed.length){toast('No failed numbers','err');return;}
+  navigator.clipboard.writeText(failed.join('\n')).then(function(){toast('Copied '+failed.length+' failed numbers','ok');}).catch(function(){toast('Copy failed','err');});
+}
+function bsClearLog(){
+  bsLog=[];
+  document.getElementById('bs-log').innerHTML='<div class="bs-empty" id="bs-empty"><div class="pg-empty-icon">✉️</div><div style="font-size:13px;font-weight:700;color:var(--t2)">Bulk Message Sender</div><div style="font-size:11px;text-align:center;max-width:280px;line-height:1.7;color:var(--t3)">Add numbers, write your message and click <strong style="color:var(--p)">Start Sending</strong></div></div>';
+  document.getElementById('bs-res-count').textContent='0 sent';
+  document.getElementById('bs-account-info').textContent='';
+  bsUpdateKpis({total:0,sent:0,fail:0,skip:0});
+  document.getElementById('bs-k-remain').textContent='—';
+  document.getElementById('bs-k-eta').textContent='—';
+}
+
+// Socket: server-side bs_send_one response handler
+socket.on('bs_send_result', function(d){
+  // handled via callback in bsStart
+});
+
 </script>
 </body>
 </html>
