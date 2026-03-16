@@ -1,18 +1,9 @@
 /**
- * WA Checker v12
- * Fixed: multi-account crash — unhandled rejections caught globally,
- * Chrome spawn isolated per account with proper error boundaries
+ * WA Checker v13 — with profile update support
  */
 
-// ── Global crash guards — MUST be first ───────────────────────────────────
-process.on('uncaughtException', (err) => {
-  console.error('[CRASH GUARD] Uncaught exception:', err.message);
-  // Don't exit — keep server alive
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('[CRASH GUARD] Unhandled rejection:', reason?.message || reason);
-  // Don't exit — keep server alive
-});
+process.on('uncaughtException',  (err) => console.error('[CRASH GUARD] Uncaught exception:', err.message));
+process.on('unhandledRejection', (reason) => console.error('[CRASH GUARD] Unhandled rejection:', reason?.message || reason));
 
 const express  = require('express');
 const http     = require('http');
@@ -28,20 +19,20 @@ const server = http.createServer(app);
 const io     = socketIO(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling'],
-  pingTimeout: 60000,
-  pingInterval: 25000,
+  pingTimeout:   60000,
+  pingInterval:  25000,
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const MAX_ACCOUNTS = 5;
 const SESSION_DIR  = path.resolve(__dirname, '.wa-session');
 if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
 
-const accounts     = new Map();   // id → account object
-const beingCreated = new Set();   // ids currently being initialized
+const accounts     = new Map();
+const beingCreated = new Set();
 
 function nextFreeId() {
   for (let i = 1; i <= MAX_ACCOUNTS; i++) if (!accounts.has(i)) return i;
@@ -52,7 +43,6 @@ let isChecking = false;
 let results    = [];
 let stats      = { valid: 0, invalid: 0, total: 0 };
 
-// ── Country code → ISO2 ───────────────────────────────────────────────────
 const CC_TO_ISO = {
   '1':'US','7':'RU','20':'EG','27':'ZA','30':'GR','31':'NL','32':'BE','33':'FR',
   '34':'ES','36':'HU','39':'IT','40':'RO','41':'CH','43':'AT','44':'GB','45':'DK',
@@ -65,12 +55,13 @@ const CC_TO_ISO = {
   '370':'LT','371':'LV','372':'EE','373':'MD','374':'AM','375':'BY','380':'UA',
   '381':'RS','385':'HR','386':'SI','387':'BA','420':'CZ','421':'SK','501':'BZ',
   '502':'GT','503':'SV','504':'HN','505':'NI','506':'CR','507':'PA','509':'HT',
-  '591':'BO','593':'EC','595':'PY','597':'SR','598':'UY','670':'TL','673':'BN',
+  '591':'BO','593':'EC','595':'PY','597':'SR','598':'UY','673':'BN',
   '855':'KH','856':'LA','880':'BD','960':'MV','961':'LB','962':'JO','963':'SY',
   '964':'IQ','965':'KW','966':'SA','967':'YE','968':'OM','971':'AE','972':'IL',
   '973':'BH','974':'QA','977':'NP','992':'TJ','993':'TM','994':'AZ','995':'GE',
   '996':'KG','998':'UZ',
 };
+
 function getCountryInfo(e164) {
   const d = (e164 || '').replace('+', '');
   for (let l = 4; l >= 1; l--) {
@@ -80,15 +71,12 @@ function getCountryInfo(e164) {
   return { iso: null, code: null };
 }
 
-// ── Find Chrome ────────────────────────────────────────────────────────────
 let _chromePath = null;
 function findChrome() {
-  if (_chromePath) return _chromePath; // cache result
+  if (_chromePath) return _chromePath;
   const candidates = [
-    '/usr/bin/google-chrome-stable',
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
+    '/usr/bin/google-chrome-stable','/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser','/usr/bin/chromium',
     (() => { try { return require('puppeteer').executablePath(); } catch { return null; } })(),
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
@@ -99,7 +87,7 @@ function findChrome() {
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   ].filter(Boolean);
   for (const p of candidates) {
-    try { if (p && fs.existsSync(p)) { _chromePath = p; console.log('[Chrome]', p); return p; } } catch {}
+    try { if (p && fs.existsSync(p)) { _chromePath = p; return p; } } catch {}
   }
   try {
     const { execSync } = require('child_process');
@@ -112,17 +100,14 @@ function findChrome() {
   return null;
 }
 
-// ── Broadcast ─────────────────────────────────────────────────────────────
 function broadcast() {
   const list = Array.from(accounts.values()).map(a => ({
     id: a.id, label: a.label, state: a.state,
     loadingPct: a.loadingPct ?? null, qr: a.qr ?? null,
+    profileName: a.profileName ?? null, profilePic: a.profilePic ?? null,
   }));
   io.emit('accounts', list);
-  io.emit('ready_count', {
-    count: list.filter(a => a.state === 'ready').length,
-    total: list.length,
-  });
+  io.emit('ready_count', { count: list.filter(a => a.state === 'ready').length, total: list.length });
 }
 
 function deleteSession(id) {
@@ -136,7 +121,7 @@ async function destroyBrowser(id, deleteSess = false) {
   const acc = accounts.get(id);
   if (!acc) return;
   const client = acc.client;
-  acc.client = null; // detach first
+  acc.client = null;
   if (client) {
     try { client.removeAllListeners(); } catch {}
     try { await Promise.race([client.destroy(), new Promise(r => setTimeout(r, 8000))]); } catch {}
@@ -148,101 +133,50 @@ async function logoutAccount(id) {
   const acc = accounts.get(id);
   if (!acc || acc.state === 'removing') return;
   acc.state = 'removing'; broadcast();
-
   const client = acc.client;
-  acc.client = null; // detach immediately so no more events fire
-
+  acc.client = null;
   if (client) {
     try { client.removeAllListeners(); } catch {}
-
-    // Step 1: logout() — tells WhatsApp servers to unlink this device
-    // This is what removes it from the phone's Linked Devices list
-    try {
-      await Promise.race([
-        client.logout(),
-        new Promise(r => setTimeout(r, 8000)),
-      ]);
-      console.log(`[Account ${id}] logout() completed`);
-    } catch (e) {
-      console.log(`[Account ${id}] logout() error (continuing):`, e.message);
-    }
-
-    // Step 2: destroy() — kills the browser process
-    try {
-      await Promise.race([
-        client.destroy(),
-        new Promise(r => setTimeout(r, 5000)),
-      ]);
-    } catch {}
+    try { await Promise.race([client.logout(), new Promise(r => setTimeout(r, 8000))]); } catch {}
+    try { await Promise.race([client.destroy(), new Promise(r => setTimeout(r, 5000))]); } catch {}
   }
-
-  // Step 3: delete session files so it won't auto-reconnect
   deleteSession(id);
-
-  // Step 4: clean up temp Chrome dir
   try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
-
   accounts.delete(id);
   broadcast();
   io.emit('toast', { msg: `Account ${id} logged out`, type: 'ok' });
-  console.log(`[Account ${id}] Fully logged out and removed`);
 }
 
-// ── Create account — fully isolated, no shared state between instances ─────
 function createAccount(id) {
   if (accounts.has(id)) { beingCreated.delete(id); return; }
-
   const chromePath = findChrome();
   if (!chromePath) {
     beingCreated.delete(id);
-    console.error('[Error] Chrome not found');
     io.emit('toast', { msg: 'Chrome not found in container', type: 'err' });
     return;
   }
 
-  console.log(`[Account ${id}] Initializing...`);
   const acc = {
     id, label: `Account ${id}`,
     client: null, state: 'init', qr: null, loadingPct: null,
+    profileName: null, profilePic: null,
   };
   accounts.set(id, acc);
   beingCreated.delete(id);
   broadcast();
 
-  // Each account gets completely separate puppeteer config
-  // Key: userDataDir is set per-account via LocalAuth clientId
   const puppeteerArgs = [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',   // Use /tmp instead of /dev/shm (avoids size limits)
-    '--disable-accelerated-2d-canvas',
-    '--disable-gpu',
-    '--no-first-run',
-    '--no-zygote',
-    // NOTE: --single-process is intentionally EXCLUDED — it prevents multi-instance
-    '--disable-extensions',
-    '--disable-background-networking',
-    '--disable-default-apps',
-    '--disable-sync',
-    '--hide-scrollbars',
-    '--mute-audio',
-    '--disable-software-rasterizer',
-    '--disable-features=VizDisplayCompositor,TranslateUI',
-    '--disable-ipc-flooding-protection',
-    `--user-data-dir=/tmp/chrome-wa-${id}`, // Explicit per-account temp dir
+    '--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas','--disable-gpu','--no-first-run','--no-zygote',
+    '--disable-extensions','--disable-background-networking','--disable-default-apps',
+    '--disable-sync','--hide-scrollbars','--mute-audio','--disable-software-rasterizer',
+    '--disable-features=VizDisplayCompositor,TranslateUI','--disable-ipc-flooding-protection',
+    `--user-data-dir=/tmp/chrome-wa-${id}`,
   ];
 
   const client = new Client({
-    authStrategy: new LocalAuth({
-      clientId: `wa-account-${id}`,
-      dataPath: SESSION_DIR,
-    }),
-    puppeteer: {
-      headless: true,
-      executablePath: chromePath,
-      timeout: 120000,
-      args: puppeteerArgs,
-    },
+    authStrategy: new LocalAuth({ clientId: `wa-account-${id}`, dataPath: SESSION_DIR }),
+    puppeteer: { headless: true, executablePath: chromePath, timeout: 120000, args: puppeteerArgs },
   });
 
   acc.client = client;
@@ -250,11 +184,9 @@ function createAccount(id) {
 
   client.on('qr', async (qr) => {
     if (acc.client !== client) return;
-    console.log(`[Account ${id}] QR ready`);
     try {
-      acc.qr    = await qrcode.toDataURL(qr, { width: 260, margin: 2 });
-      acc.state = 'qr';
-      acc.loadingPct = null;
+      acc.qr = await qrcode.toDataURL(qr, { width: 260, margin: 2 });
+      acc.state = 'qr'; acc.loadingPct = null;
       broadcast();
     } catch (e) { console.error(`[Account ${id}] QR error:`, e.message); }
   });
@@ -262,7 +194,6 @@ function createAccount(id) {
   client.on('authenticated', () => {
     if (acc.client !== client || authOnce) return;
     authOnce = true;
-    console.log(`[Account ${id}] Authenticated`);
     acc.state = 'authenticated'; acc.qr = null; acc.loadingPct = 0;
     broadcast();
   });
@@ -273,53 +204,50 @@ function createAccount(id) {
     broadcast();
   });
 
-  client.on('ready', () => {
+  client.on('ready', async () => {
     if (acc.client !== client) return;
-    console.log(`[Account ${id}] READY ✓`);
     acc.state = 'ready'; acc.qr = null; acc.loadingPct = null;
+    try {
+      const info = client.info;
+      acc.profileName = info?.pushname || info?.me?.user || null;
+      try {
+        const wid = info?.me?.user ? info.me.user + '@c.us' : null;
+        if (wid) acc.profilePic = await client.getProfilePicUrl(wid).catch(() => null);
+      } catch {}
+    } catch {}
     broadcast();
-    io.emit('toast', { msg: `Account ${id} connected!`, type: 'ok' });
+    io.emit('toast', { msg: `Account ${id} connected ✓`, type: 'ok' });
   });
 
-  client.on('auth_failure', (msg) => {
+  client.on('auth_failure', () => {
     if (acc.client !== client) return;
-    console.log(`[Account ${id}] Auth failed:`, msg);
     acc.state = 'error'; broadcast(); deleteSession(id);
   });
 
   client.on('disconnected', (reason) => {
     if (acc.client !== client) return;
-    console.log(`[Account ${id}] Disconnected: ${reason}`);
     acc.state = 'disconnected'; acc.loadingPct = null;
     broadcast();
     io.emit('toast', { msg: `Account ${id} disconnected`, type: 'err' });
     if (reason === 'LOGOUT') deleteSession(id);
-    // Clean up temp dir
     try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
   });
 
-  // ── The critical fix: wrap initialize() in its own try-catch
-  // A crash here must NOT propagate to the server process
   client.initialize().catch((err) => {
-    if (acc.client !== client) return; // already destroyed, ignore
+    if (acc.client !== client) return;
     const msg = err?.message || String(err);
     console.error(`[Account ${id}] Init error: ${msg}`);
-
     if (msg.includes('already running') || msg.includes('userDataDir')) {
-      console.log(`[Account ${id}] Browser lock conflict — cleaning up and retrying in 5s`);
       acc.state = 'error'; broadcast();
       accounts.delete(id);
-      // Clean up the conflicting temp dir
       try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
       setTimeout(() => createAccount(id), 5000);
       return;
     }
-
     acc.state = 'error'; broadcast();
   });
 }
 
-// ── Get first ready client ────────────────────────────────────────────────
 function getReadyClient() {
   for (const acc of accounts.values()) {
     if (acc.state === 'ready' && acc.client) return acc.client;
@@ -327,7 +255,6 @@ function getReadyClient() {
   return null;
 }
 
-// ── Check number ───────────────────────────────────────────────────────────
 async function checkNumber(raw, acc) {
   const cleaned = raw.replace(/\D/g, '').replace(/^0+/, '');
   if (cleaned.length < 7 || cleaned.length > 15)
@@ -345,7 +272,6 @@ async function checkNumber(raw, acc) {
     ]);
     const pic         = picRes.value     || null;
     const contact     = contactRes.value || null;
-    // getStatus() does not exist — read status from contact properties
     const statusText  = contact?.statusMessage || contact?.about || contact?.status || null;
     const isBusiness  = contact?.isBusiness  ?? false;
     const isEnterprise= contact?.isEnterprise ?? false;
@@ -357,12 +283,9 @@ async function checkNumber(raw, acc) {
     return {
       number: raw, cleaned, e164: '+' + cleaned, registered: true,
       waLink: `https://wa.me/${cleaned}`,
-      profilePic: pic,
-      isBusiness, isEnterprise, accountType,
-      name,
-      status: statusText,
-      country: countryInfo.iso,
-      countryCode: countryInfo.code,
+      profilePic: pic, isBusiness, isEnterprise, accountType,
+      name, status: statusText,
+      country: countryInfo.iso, countryCode: countryInfo.code,
       checkedAt: new Date().toISOString(), account: acc.label,
     };
   } catch (err) {
@@ -398,7 +321,6 @@ async function processQueue(numbers) {
     if (i < numbers.length - 1 && isChecking) await new Promise(r => setTimeout(r, delay));
   }
   isChecking = false; io.emit('done', { results, stats });
-  console.log(`Done — ${stats.valid}/${stats.total}`);
 }
 
 async function sendMessage(numbers, message) {
@@ -418,8 +340,9 @@ async function sendMessage(numbers, message) {
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/status', (req, res) => res.json({ ok: true, accounts: accounts.size }));
+app.get('/',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/status',  (req, res) => res.json({ ok: true, accounts: accounts.size }));
+
 app.get('/export/csv', (req, res) => {
   if (!results.length) return res.status(404).json({ error: 'No results' });
   const csv = ['Number,E164,On WhatsApp,Type,Name,Status,Country,WA Link,Account,Checked At',
@@ -427,17 +350,19 @@ app.get('/export/csv', (req, res) => {
       r.accountType||'', r.name||'', r.status||'', r.country||'',
       r.waLink||'', r.account||'', r.checkedAt||'']
       .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))].join('\n');
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="wa_results.csv"');
+  res.setHeader('Content-Type','text/csv');
+  res.setHeader('Content-Disposition','attachment; filename="wa_results.csv"');
   res.send(csv);
 });
+
 app.get('/export/txt', (req, res) => {
   const valid = results.filter(r => r.registered);
   if (!valid.length) return res.status(404).json({ error: 'No valid numbers' });
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Content-Disposition', 'attachment; filename="valid_numbers.txt"');
+  res.setHeader('Content-Type','text/plain');
+  res.setHeader('Content-Disposition','attachment; filename="valid_numbers.txt"');
   res.send(valid.map(r => r.e164 || ('+' + r.cleaned)).join('\n'));
 });
+
 app.post('/send', async (req, res) => {
   const { numbers, message } = req.body;
   if (!numbers?.length || !message?.trim()) return res.status(400).json({ error: 'numbers and message required' });
@@ -447,6 +372,7 @@ app.post('/send', async (req, res) => {
 // ── Sockets ───────────────────────────────────────────────────────────────
 io.on('connection', (socket) => {
   broadcast();
+
   socket.on('add_account', () => {
     if (accounts.size >= MAX_ACCOUNTS)
       return socket.emit('toast', { msg: `Max ${MAX_ACCOUNTS} accounts`, type: 'err' });
@@ -455,7 +381,9 @@ io.on('connection', (socket) => {
     beingCreated.add(id);
     createAccount(id);
   });
+
   socket.on('logout_account',  async ({ id }) => { await logoutAccount(parseInt(id)); });
+
   socket.on('restart_account', async ({ id }) => {
     const numId = parseInt(id);
     const acc   = accounts.get(numId);
@@ -463,10 +391,37 @@ io.on('connection', (socket) => {
     acc.state = 'init'; broadcast();
     await destroyBrowser(numId, false);
     accounts.delete(numId);
-    // Clean temp dir before restart
     try { fs.rmSync(`/tmp/chrome-wa-${numId}`, { recursive: true, force: true }); } catch {}
     setTimeout(() => createAccount(numId), 2500);
   });
+
+  socket.on('update_profile', async ({ id, name, picBase64 }) => {
+    const numId = parseInt(id);
+    const acc   = accounts.get(numId);
+    if (!acc || acc.state !== 'ready' || !acc.client)
+      return socket.emit('toast', { msg: 'Account not ready', type: 'err' });
+    try {
+      if (name && name.trim()) {
+        try { await acc.client.setDisplayName(name.trim()); } catch {}
+        acc.profileName = name.trim();
+      }
+      if (picBase64) {
+        const { MessageMedia } = require('whatsapp-web.js');
+        const b64 = picBase64.replace(/^data:image\/\w+;base64,/, '');
+        const media = new MessageMedia('image/jpeg', b64);
+        try { await acc.client.setProfilePicture(media); } catch {}
+        try {
+          const wid = acc.client.info?.me?.user ? acc.client.info.me.user + '@c.us' : null;
+          if (wid) acc.profilePic = await acc.client.getProfilePicUrl(wid).catch(() => acc.profilePic);
+        } catch {}
+      }
+      broadcast();
+      socket.emit('toast', { msg: 'Profile updated!', type: 'ok' });
+    } catch (e) {
+      socket.emit('toast', { msg: 'Update failed: ' + e.message, type: 'err' });
+    }
+  });
+
   socket.on('check', ({ numbers }) => {
     if (!Array.from(accounts.values()).some(a => a.state === 'ready'))
       return socket.emit('error_msg', { message: 'No accounts connected.' });
@@ -474,25 +429,22 @@ io.on('connection', (socket) => {
     if (!numbers?.length) return socket.emit('error_msg', { message: 'No numbers.' });
     processQueue(numbers);
   });
+
   socket.on('send_message', async ({ numbers, message }) => {
     if (!numbers?.length || !message?.trim())
       return socket.emit('toast', { msg: 'Numbers and message required', type: 'err' });
     const result = await sendMessage(numbers, message);
     socket.emit('send_done', result);
-    socket.emit('toast', {
-      msg: `Sent: ${result.sent}  Failed: ${result.failed}`,
-      type: result.failed > 0 ? 'warn' : 'ok',
-    });
+    socket.emit('toast', { msg: `Sent: ${result.sent}  Failed: ${result.failed}`, type: result.failed > 0 ? 'warn' : 'ok' });
   });
+
   socket.on('stop', () => { isChecking = false; io.emit('toast', { msg: 'Stopped', type: 'ok' }); });
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\nWA Checker v12 → http://localhost:${PORT}`);
-  const chrome = findChrome();
-  if (!chrome) console.error('[Chrome] NOT FOUND — check Docker image');
+  console.log(`\nWA Checker v13 → http://localhost:${PORT}`);
+  if (!findChrome()) console.error('[Chrome] NOT FOUND');
   createAccount(1);
 });
 
