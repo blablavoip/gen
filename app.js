@@ -1,5 +1,5 @@
 /**
- * WA Checker v15 — minimal memory, fast QR, robust disconnect detection
+ * WA Checker v17 — minimal memory, fast QR, robust disconnect detection
  */
 
 process.on('uncaughtException',  e => console.error('[CRASH]', e.message));
@@ -616,7 +616,7 @@ io.on('connection', (socket) => {
 // ── Start ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\nWA Checker v15 → http://localhost:${PORT}`);
+  console.log(`\nWA Checker v17 → http://localhost:${PORT}`);
   if (!findChrome()) console.error('[Chrome] NOT FOUND — install chromium or google-chrome');
   // Start account 1 after a short delay to let the HTTP server settle
   setTimeout(() => enqueueCreate(1), 500);
