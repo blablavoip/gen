@@ -132,11 +132,11 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .results-wrap{flex:1;overflow-y:auto;min-height:0}
 
 /* Column headers */
-.col-head{display:grid;grid-template-columns:36px 36px 28px 1fr 90px 80px 80px 100px 80px;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--s1);z-index:5}
+.col-head{display:grid;grid-template-columns:36px 36px 28px 1fr 90px 80px 110px 100px 80px 80px;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--s1);z-index:5}
 .col-h{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
 
 /* Result row */
-.rrow{display:grid;grid-template-columns:36px 36px 28px 1fr 90px 80px 80px 100px 80px;gap:6px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .1s;animation:fade-in .2s ease;cursor:default}
+.rrow{display:grid;grid-template-columns:36px 36px 28px 1fr 90px 80px 110px 100px 80px 80px;gap:6px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .1s;animation:fade-in .2s ease;cursor:default}
 @keyframes fade-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
 .rrow:hover{background:var(--s2)}
 
@@ -163,6 +163,12 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 
 /* WA Status text */
 .wa-status{font-size:10px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:96px;cursor:help}
+
+/* Carrier badge */
+.carrier-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;font-size:9px;font-weight:600;white-space:nowrap;max-width:105px;overflow:hidden;text-overflow:ellipsis;background:rgba(0,188,212,.08);color:#00bcd4;border:1px solid rgba(0,188,212,.2)}
+.carrier-chip.loading{background:rgba(255,202,40,.06);color:var(--y);border-color:rgba(255,202,40,.2);animation:pulse 1.2s infinite}
+.carrier-chip.unknown{background:rgba(255,255,255,.04);color:var(--t3);border-color:var(--border)}
+.carrier-chip.error{background:rgba(255,61,87,.06);color:var(--r);border-color:rgba(255,61,87,.2)}
 
 /* Row actions */
 .row-acts{display:flex;gap:3px;justify-content:flex-end}
@@ -302,6 +308,55 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .pg-country-grid::-webkit-scrollbar,.pg-numbers-list::-webkit-scrollbar,.pg-options::-webkit-scrollbar{width:4px}
 .pg-country-grid::-webkit-scrollbar-track,.pg-numbers-list::-webkit-scrollbar-track,.pg-options::-webkit-scrollbar-track{background:transparent}
 .pg-country-grid::-webkit-scrollbar-thumb,.pg-numbers-list::-webkit-scrollbar-thumb,.pg-options::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── CARRIER DETECT ── */
+.cd-wrap{flex:1;display:flex;overflow:hidden}
+.cd-left{width:300px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px;gap:12px;overflow-y:auto}
+.cd-right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cd-section-title{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.cd-section-title::before{content:'';width:3px;height:3px;border-radius:50%;background:#00bcd4;display:block}
+.cd-textarea{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:var(--t1);resize:none;height:140px;outline:none;line-height:1.8;caret-color:#00bcd4;transition:border-color .15s}
+.cd-textarea:focus{border-color:rgba(0,188,212,.4)}
+.cd-textarea::placeholder{color:var(--t3)}
+.cd-api-field{display:flex;flex-direction:column;gap:5px}
+.cd-api-label{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+.cd-api-input{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-family:var(--mono);font-size:11px;color:var(--t1);outline:none;width:100%;transition:border-color .15s}
+.cd-api-input:focus{border-color:rgba(0,188,212,.4)}
+.cd-api-input::placeholder{color:var(--t3)}
+.cd-api-select{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-family:var(--font);font-size:11px;color:var(--t1);outline:none;width:100%;cursor:pointer;transition:border-color .15s;-webkit-appearance:none}
+.cd-api-select:focus{border-color:rgba(0,188,212,.4)}
+.cd-hint{font-size:10px;color:var(--t3);line-height:1.6}
+.cd-hint a{color:#00bcd4;text-decoration:none}
+.cd-detect-btn{width:100%;height:38px;background:#00bcd4;border:none;border-radius:8px;color:#000;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.cd-detect-btn:hover{background:#00acc1;transform:translateY(-1px)}
+.cd-detect-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.cd-stop-btn{width:100%;height:38px;background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.3);border-radius:8px;color:var(--r);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;display:none;align-items:center;justify-content:center;gap:5px}
+.cd-stop-btn.show{display:flex}
+.cd-stop-btn:hover{background:rgba(255,61,87,.2)}
+.cd-results-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;flex-wrap:wrap}
+.cd-prog-row{padding:6px 14px;border-bottom:1px solid var(--border);display:none;background:var(--s1);flex-shrink:0}
+.cd-prog-row.show{display:block}
+.cd-prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:5px}
+.cd-prog-fill{height:100%;background:linear-gradient(90deg,#00bcd4,#00e676);border-radius:2px;width:0%;transition:width .3s ease}
+.cd-num-grid{flex:1;overflow-y:auto;font-family:var(--mono)}
+.cd-num-grid::-webkit-scrollbar{width:4px}
+.cd-num-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.cd-row{display:grid;grid-template-columns:36px 24px 1fr 120px 100px 70px;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .1s;animation:fade-in .15s ease}
+.cd-row:hover{background:var(--s2)}
+.cd-row-head{display:grid;grid-template-columns:36px 24px 1fr 120px 100px 70px;gap:8px;align-items:center;padding:5px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--s1);z-index:2}
+.cd-carrier-name{font-size:11px;font-weight:600;color:#00bcd4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-carrier-type{font-size:9px;color:var(--t3)}
+.cd-carrier-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;white-space:nowrap}
+.cd-badge-mobile{background:rgba(0,230,118,.08);color:var(--g);border:1px solid rgba(0,230,118,.2)}
+.cd-badge-landline{background:rgba(68,138,255,.08);color:var(--b);border:1px solid rgba(68,138,255,.2)}
+.cd-badge-voip{background:rgba(0,188,212,.08);color:#00bcd4;border:1px solid rgba(0,188,212,.2)}
+.cd-badge-unknown{background:rgba(255,255,255,.04);color:var(--t3);border:1px solid var(--border)}
+.cd-badge-toll_free{background:rgba(255,202,40,.08);color:var(--y);border:1px solid rgba(255,202,40,.2)}
+.cd-kpi-row{display:flex;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.cd-kpi{flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border)}
+.cd-kpi:last-child{border-right:none}
+.cd-kpi-n{font-size:20px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.5px;margin-bottom:2px}
+.cd-kpi-l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
 
 .toast{background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:12px;max-width:300px;transform:translateX(110%);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .toast.show{transform:translateX(0);opacity:1}
@@ -466,6 +521,10 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
         Phone Generator
       </button>
+      <button class="tab-btn" id="tab-carrier" onclick="switchTab('carrier')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6l4.5 4.5M22.5 1.5l-18 18M8 3.5A5.5 5.5 0 0119.5 15"/><path d="M4.5 7A9.5 9.5 0 0117 19.5"/></svg>
+        Carrier Detect
+      </button>
     </div>
 
     <!-- ── CHECKER PANEL ── -->
@@ -534,6 +593,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
         <div class="col-h">Number</div>
         <div class="col-h">Status</div>
         <div class="col-h">Type</div>
+        <div class="col-h">Carrier</div>
         <div class="col-h">WA Status</div>
         <div class="col-h">Account</div>
         <div class="col-h">Actions</div>
@@ -679,6 +739,119 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
       </div>
     </div>
     <!-- end panel-phonegen -->
+
+    <!-- ── CARRIER DETECT PANEL ── -->
+    <div class="tab-panel" id="panel-carrier">
+      <div class="cd-wrap">
+
+        <!-- LEFT -->
+        <div class="cd-left">
+          <div class="cd-section-title">Phone Numbers</div>
+          <textarea class="cd-textarea" id="cd-numbers" placeholder="+12025551234&#10;+447911123456&#10;+33612345678&#10;&#10;One per line, E.164 format"></textarea>
+          <div style="font-size:10px;color:var(--t3)" id="cd-count-badge">0 numbers</div>
+
+          <div class="cd-section-title" style="margin-top:4px">Detection Method</div>
+          <div class="cd-api-field">
+            <div class="cd-api-label">Method</div>
+            <select class="cd-api-select" id="cd-method" onchange="cdMethodChange()">
+              <option value="local">🔍 Local Prefix DB (instant, offline)</option>
+              <option value="numverify">🌐 Numverify API (live, accurate)</option>
+              <option value="abstract">🌐 AbstractAPI (live, accurate)</option>
+            </select>
+          </div>
+
+          <div id="cd-api-key-field" class="cd-api-field" style="display:none">
+            <div class="cd-api-label">API Key</div>
+            <input class="cd-api-input" id="cd-api-key" placeholder="Enter your API key…" type="password">
+            <div class="cd-hint" id="cd-api-hint">
+              Free key at <a href="https://numverify.com" target="_blank">numverify.com</a> — 100 req/month free
+            </div>
+          </div>
+
+          <div id="cd-delay-field" class="cd-api-field" style="display:none">
+            <div class="cd-api-label">Delay between requests (ms)</div>
+            <input class="cd-api-input" id="cd-delay" type="number" value="500" min="100" max="5000" placeholder="500">
+          </div>
+
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button class="cd-detect-btn" id="cd-detect-btn" onclick="cdStart()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              Detect Carriers
+            </button>
+            <button class="cd-stop-btn" id="cd-stop-btn" onclick="cdStop()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+              Stop
+            </button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="cd-right">
+
+          <!-- KPIs -->
+          <div class="cd-kpi-row">
+            <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--b)" id="cd-k-total">0</div><div class="cd-kpi-l">Checked</div></div>
+            <div class="cd-kpi"><div class="cd-kpi-n" style="color:#00bcd4" id="cd-k-found">0</div><div class="cd-kpi-l">Identified</div></div>
+            <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--g)" id="cd-k-mobile">0</div><div class="cd-kpi-l">Mobile</div></div>
+            <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--b)" id="cd-k-landline">0</div><div class="cd-kpi-l">Landline</div></div>
+            <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--y)" id="cd-k-voip">0</div><div class="cd-kpi-l">VoIP</div></div>
+          </div>
+
+          <!-- Progress -->
+          <div class="cd-prog-row" id="cd-prog-row">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);font-family:var(--mono)">
+              <span id="cd-prog-txt">Detecting…</span>
+              <span id="cd-prog-pct">0%</span>
+            </div>
+            <div class="cd-prog-track"><div class="cd-prog-fill" id="cd-prog-fill"></div></div>
+          </div>
+
+          <!-- Results header -->
+          <div class="cd-results-header">
+            <span style="font-size:11px;font-weight:600;color:var(--t1)" id="cd-res-count">0 results</span>
+            <div style="display:flex;gap:5px;margin-left:auto">
+              <button class="pg-act-btn b" onclick="cdCopyAll()">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy All
+              </button>
+              <button class="pg-act-btn g" onclick="cdDownloadCsv()">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+              <button class="pg-act-btn" onclick="cdSendToChecker()" title="Send numbers to WA Checker">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                → WA Checker
+              </button>
+              <button class="pg-act-btn r" onclick="cdClear()">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Column headers -->
+          <div class="cd-row-head">
+            <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">#</div>
+            <div style="font-size:9px;color:var(--t3)">🏳</div>
+            <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Number</div>
+            <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Carrier</div>
+            <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Country</div>
+            <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Type</div>
+          </div>
+
+          <div class="cd-num-grid" id="cd-results">
+            <div class="pg-empty" id="cd-empty">
+              <div class="pg-empty-icon">📡</div>
+              <div style="font-size:14px;font-weight:600;color:var(--t2)">Carrier Detection</div>
+              <div style="font-size:12px;text-align:center;max-width:280px;line-height:1.7;color:var(--t3)">Paste phone numbers on the left, choose detection method, and click <strong style="color:#00bcd4">Detect Carriers</strong></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- end panel-carrier -->
 
   </main>
 </div>
@@ -931,12 +1104,16 @@ function renderRow(r, idx){
     +'<div class="r-num-col"><div class="r-num">'+(r.e164||r.number)+'</div>'+(r.name?'<div class="r-name">'+esc(r.name)+'</div>':'')+'</div>'
     +'<div>'+statusChip+'</div>'
     +'<div>'+typeChip+'</div>'
+    +'<div id="carrier-'+idx+'" class="carrier-chip loading">⏳ detecting…</div>'
     +'<div>'+waSt+'</div>'
     +'<div style="font-size:10px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.account||'—')+'</div>'
     +acts;
 
   list.appendChild(row);
   row.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // Auto-detect carrier for this row
+  setTimeout(function(){ detectCarrierForRow(r.e164||r.number, idx); }, 100);
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────
@@ -1327,12 +1504,562 @@ function pgClear() {
   document.getElementById('pg-meta').textContent = '';
 }
 
-// Init phone generator
+// ── CARRIER DETECTION ENGINE ───────────────────────────────────────────────
+
+// Prefix → {carrier, type} database (covers major carriers worldwide)
+var CARRIER_DB = (function(){
+  var db = {};
+  function add(prefix, carrier, type) { db[prefix] = {carrier:carrier, type:type||'mobile'}; }
+
+  // ── USA ──
+  ['201','202','203','205','206','207','208','209','210','212','213','214','215','216','217','218','219','224','225','228','229','231','234','239','240','248'].forEach(function(p){ add('+1'+p,'AT&T','mobile'); });
+  ['251','252','253','254','256','260','262','267','269','270','272','274','276','281','283','301','302','303','304','305','307','308','309','310'].forEach(function(p){ add('+1'+p,'T-Mobile','mobile'); });
+  ['312','313','314','315','316','317','318','319','320','321','323','325','330','331','334','336','337','339','346','347','351','352','360','361','364','380'].forEach(function(p){ add('+1'+p,'Verizon','mobile'); });
+  ['385','386','401','402','404','405','406','407','408','409','410','412','413','414','415','417','419','423','424','425','430','432','434','435','440','442','443'].forEach(function(p){ add('+1'+p,'AT&T','landline'); });
+  // toll-free
+  add('+1800','Toll-Free','toll_free'); add('+1888','Toll-Free','toll_free'); add('+1877','Toll-Free','toll_free'); add('+1866','Toll-Free','toll_free'); add('+1855','Toll-Free','toll_free');
+  add('+1900','Premium Rate','premium');
+
+  // ── UK ──
+  add('+4474','EE','mobile'); add('+4475','Vodafone','mobile'); add('+4476','O2','mobile');
+  add('+4477','Three','mobile'); add('+4478','BT Mobile','mobile'); add('+4479','Sky Mobile','mobile');
+  add('+4420','BT','landline'); add('+44121','BT','landline'); add('+44131','BT','landline');
+  add('+44800','Freephone','toll_free');
+
+  // ── France ──
+  add('+336','Orange','mobile'); add('+337','SFR','mobile');
+  add('+3306','Bouygues','mobile'); add('+3307','Free Mobile','mobile');
+  add('+331','Orange','landline'); add('+332','SFR','landline');
+  add('+33800','Numéro vert','toll_free');
+
+  // ── Germany ──
+  add('+4915','Telekom','mobile'); add('+4916','Vodafone DE','mobile'); add('+4917','O2 DE','mobile');
+  add('+4930','Telekom DE','landline'); add('+4940','Telekom DE','landline');
+  add('+49800','Freephone DE','toll_free');
+
+  // ── Spain ──
+  add('+346','Movistar','mobile'); add('+347','Vodafone ES','mobile');
+  add('+3491','Movistar','landline'); add('+3493','Vodafone ES','landline');
+
+  // ── Italy ──
+  add('+393','TIM','mobile'); add('+3930','WindTre','mobile'); add('+3931','Vodafone IT','mobile');
+  add('+3932','TIM','mobile'); add('+3933','WindTre','mobile');
+
+  // ── Russia ──
+  add('+7900','MegaFon','mobile'); add('+7901','MTS','mobile'); add('+7902','Beeline','mobile');
+  add('+7903','MTS','mobile'); add('+7904','MegaFon','mobile'); add('+7905','Beeline','mobile');
+  add('+7906','MTS','mobile'); add('+7910','MTS','mobile'); add('+7911','MegaFon','mobile');
+  add('+7912','Beeline','mobile'); add('+7916','MTS','mobile'); add('+7917','Beeline','mobile');
+  add('+7921','MegaFon','mobile'); add('+7925','MTS','mobile'); add('+7926','MTS','mobile');
+  add('+7960','Beeline','mobile'); add('+7961','MTS','mobile'); add('+7985','MTS','mobile');
+
+  // ── India ──
+  add('+9162','Airtel','mobile'); add('+9163','BSNL','mobile'); add('+9170','Vodafone IN','mobile');
+  add('+9172','Airtel','mobile'); add('+9173','Jio','mobile'); add('+9174','Vodafone IN','mobile');
+  add('+9175','Jio','mobile'); add('+9176','Airtel','mobile'); add('+9177','Jio','mobile');
+  add('+9178','Airtel','mobile'); add('+9179','Jio','mobile'); add('+9180','Vodafone IN','mobile');
+  add('+9181','BSNL','mobile'); add('+9182','Airtel','mobile'); add('+9183','Jio','mobile');
+  add('+9184','Jio','mobile'); add('+9185','Airtel','mobile'); add('+9186','BSNL','mobile');
+  add('+9187','Airtel','mobile'); add('+9188','Jio','mobile'); add('+9189','Vodafone IN','mobile');
+  add('+9190','Jio','mobile'); add('+9191','Airtel','mobile'); add('+9192','BSNL','mobile');
+  add('+9193','Jio','mobile'); add('+9194','Vodafone IN','mobile'); add('+9195','Jio','mobile');
+  add('+9196','Airtel','mobile'); add('+9197','BSNL','mobile'); add('+9198','Airtel','mobile');
+  add('+9199','Jio','mobile');
+
+  // ── China ──
+  add('+86130','China Unicom','mobile'); add('+86131','China Telecom','mobile');
+  add('+86132','China Telecom','mobile'); add('+86133','China Telecom','mobile');
+  add('+86134','China Mobile','mobile'); add('+86135','China Mobile','mobile');
+  add('+86136','China Mobile','mobile'); add('+86137','China Mobile','mobile');
+  add('+86138','China Mobile','mobile'); add('+86139','China Mobile','mobile');
+  add('+86150','China Telecom','mobile'); add('+86151','China Unicom','mobile');
+  add('+86152','China Telecom','mobile'); add('+86153','China Telecom','mobile');
+  add('+86155','China Unicom','mobile'); add('+86156','China Unicom','mobile');
+  add('+86157','China Mobile','mobile'); add('+86158','China Mobile','mobile');
+  add('+86159','China Mobile','mobile'); add('+86166','China Unicom','mobile');
+  add('+86180','China Telecom','mobile'); add('+86181','China Telecom','mobile');
+  add('+86182','China Mobile','mobile'); add('+86183','China Mobile','mobile');
+  add('+86184','China Mobile','mobile'); add('+86185','China Telecom','mobile');
+  add('+86186','China Unicom','mobile'); add('+86187','China Unicom','mobile');
+  add('+86188','China Mobile','mobile'); add('+86189','China Telecom','mobile');
+  add('+8610','China Telecom','landline'); add('+8620','China Telecom','landline');
+  add('+8621','China Telecom','landline');
+
+  // ── Brazil ──
+  add('+5511','Claro BR','mobile'); add('+5521','TIM BR','mobile'); add('+5531','Vivo','mobile');
+  add('+5541','Oi','mobile'); add('+5551','Claro BR','mobile'); add('+5561','TIM BR','mobile');
+  add('+5571','Vivo','mobile'); add('+5581','Oi','mobile'); add('+5591','TIM BR','mobile');
+
+  // ── Japan ──
+  add('+81070','NTT DoCoMo','mobile'); add('+81080','SoftBank','mobile'); add('+81090','au (KDDI)','mobile');
+  add('+813','NTT East','landline'); add('+816','NTT West','landline');
+  add('+81120','Freephone JP','toll_free');
+
+  // ── South Korea ──
+  add('+8210','SK Telecom','mobile'); add('+8216','KT','mobile'); add('+8217','LG Uplus','mobile');
+  add('+822','KT','landline'); add('+8231','SK Broadband','landline');
+
+  // ── UAE ──
+  add('+97150','Etisalat','mobile'); add('+97152','Etisalat','mobile'); add('+97154','du','mobile');
+  add('+97155','Etisalat','mobile'); add('+97156','du','mobile'); add('+97158','Etisalat','mobile');
+  add('+9712','Etisalat','landline'); add('+9714','Etisalat','landline');
+
+  // ── Saudi Arabia ──
+  add('+96650','STC','mobile'); add('+96653','Mobily','mobile'); add('+96654','STC','mobile');
+  add('+96655','Zain SA','mobile'); add('+96656','Mobily','mobile'); add('+96658','STC','mobile');
+  add('+96611','STC','landline'); add('+96612','STC','landline');
+
+  // ── Turkey ──
+  add('+90501','Turkcell','mobile'); add('+90505','Turkcell','mobile'); add('+90506','Vodafone TR','mobile');
+  add('+90507','Turkcell','mobile'); add('+90530','Turkcell','mobile'); add('+90531','Turkcell','mobile');
+  add('+90532','Turkcell','mobile'); add('+90533','Turkcell','mobile'); add('+90534','Turkcell','mobile');
+  add('+90535','Turkcell','mobile'); add('+90536','Vodafone TR','mobile'); add('+90537','Vodafone TR','mobile');
+  add('+90538','Turkcell','mobile'); add('+90539','Vodafone TR','mobile'); add('+90540','Turk Telekom','mobile');
+  add('+90541','Turk Telekom','mobile'); add('+90542','Turk Telekom','mobile'); add('+90543','Turk Telekom','mobile');
+  add('+90544','Turk Telekom','mobile'); add('+90545','Turk Telekom','mobile'); add('+90546','Turk Telekom','mobile');
+  add('+90547','Turk Telekom','mobile'); add('+90548','Turk Telekom','mobile'); add('+90549','Turk Telekom','mobile');
+  add('+90550','Turk Telekom','mobile'); add('+90551','Turk Telekom','mobile'); add('+90552','Vodafone TR','mobile');
+  add('+90553','Vodafone TR','mobile'); add('+90554','Vodafone TR','mobile'); add('+90555','Turkcell','mobile');
+  add('+90556','Vodafone TR','mobile'); add('+90557','Turk Telekom','mobile'); add('+90558','Vodafone TR','mobile');
+  add('+90559','Turkcell','mobile'); add('+90560','Turk Telekom','mobile'); add('+90561','Turk Telekom','mobile');
+  add('+90562','Turkcell','mobile'); add('+90563','Turk Telekom','mobile');
+
+  // ── Pakistan ──
+  add('+92300','Jazz','mobile'); add('+92301','Jazz','mobile'); add('+92302','Jazz','mobile');
+  add('+92303','Jazz','mobile'); add('+92304','Jazz','mobile'); add('+92305','Jazz','mobile');
+  add('+92306','Jazz','mobile'); add('+92307','Jazz','mobile'); add('+92308','Jazz','mobile');
+  add('+92309','Jazz','mobile'); add('+92310','Jazz','mobile'); add('+92311','Jazz','mobile');
+  add('+92312','Jazz','mobile'); add('+92313','Jazz','mobile'); add('+92314','Telenor PK','mobile');
+  add('+92315','Telenor PK','mobile'); add('+92316','Telenor PK','mobile'); add('+92317','Telenor PK','mobile');
+  add('+92318','Telenor PK','mobile'); add('+92319','Telenor PK','mobile'); add('+92320','Jazz','mobile');
+  add('+92321','Jazz','mobile'); add('+92322','Jazz','mobile'); add('+92323','Jazz','mobile');
+  add('+92324','Jazz','mobile'); add('+92325','Jazz','mobile'); add('+92326','Jazz','mobile');
+  add('+92327','Jazz','mobile'); add('+92328','Jazz','mobile'); add('+92329','Jazz','mobile');
+  add('+92330','Telenor PK','mobile'); add('+92331','Telenor PK','mobile'); add('+92332','Telenor PK','mobile');
+  add('+92333','Telenor PK','mobile'); add('+92334','Telenor PK','mobile'); add('+92335','Zong PK','mobile');
+  add('+92336','Zong PK','mobile'); add('+92337','Zong PK','mobile'); add('+92338','Zong PK','mobile');
+  add('+92339','Zong PK','mobile'); add('+92340','Zong PK','mobile'); add('+92341','Zong PK','mobile');
+  add('+92342','Zong PK','mobile'); add('+92343','Zong PK','mobile'); add('+92344','Ufone','mobile');
+  add('+92345','Ufone','mobile'); add('+92346','Ufone','mobile'); add('+92347','Ufone','mobile');
+  add('+92348','Ufone','mobile'); add('+92349','Ufone','mobile');
+
+  // ── Nigeria ──
+  add('+234701','Airtel NG','mobile'); add('+234703','MTN NG','mobile'); add('+234706','MTN NG','mobile');
+  add('+234802','Airtel NG','mobile'); add('+234803','MTN NG','mobile'); add('+234805','Glo NG','mobile');
+  add('+234806','MTN NG','mobile'); add('+234810','MTN NG','mobile'); add('+234813','MTN NG','mobile');
+  add('+234814','Airtel NG','mobile'); add('+234816','MTN NG','mobile'); add('+234817','MTN NG','mobile');
+  add('+234818','Airtel NG','mobile'); add('+234901','Airtel NG','mobile'); add('+234902','Airtel NG','mobile');
+  add('+234903','MTN NG','mobile'); add('+234904','Airtel NG','mobile'); add('+234905','Glo NG','mobile');
+  add('+234906','MTN NG','mobile'); add('+234907','Airtel NG','mobile'); add('+234908','Airtel NG','mobile');
+  add('+234909','MTN NG','mobile');
+
+  // ── Egypt ──
+  add('+20100','Vodafone EG','mobile'); add('+20101','Orange EG','mobile'); add('+20106','Etisalat EG','mobile');
+  add('+20109','We','mobile'); add('+20110','Vodafone EG','mobile'); add('+20111','Etisalat EG','mobile');
+  add('+20112','Vodafone EG','mobile'); add('+20114','Orange EG','mobile'); add('+20115','Etisalat EG','mobile');
+  add('+20120','Orange EG','mobile'); add('+20122','Orange EG','mobile'); add('+20127','Vodafone EG','mobile');
+  add('+20128','Etisalat EG','mobile'); add('+202','Telecom Egypt','landline');
+
+  // ── South Africa ──
+  add('+2760','Cell C','mobile'); add('+2761','Vodacom SA','mobile'); add('+2762','MTN SA','mobile');
+  add('+2763','Cell C','mobile'); add('+2764','Vodacom SA','mobile'); add('+2765','Cell C','mobile');
+  add('+2766','Cell C','mobile'); add('+2767','Cell C','mobile'); add('+2768','Cell C','mobile');
+  add('+2769','Cell C','mobile'); add('+2771','Vodacom SA','mobile'); add('+2772','MTN SA','mobile');
+  add('+2773','MTN SA','mobile'); add('+2774','Telkom SA','mobile'); add('+2776','Vodacom SA','mobile');
+  add('+2778','MTN SA','mobile'); add('+2779','Vodacom SA','mobile'); add('+2781','Vodacom SA','mobile');
+  add('+2782','MTN SA','mobile'); add('+2783','MTN SA','mobile'); add('+2784','Cell C','mobile');
+
+  // ── Australia ──
+  add('+614','Telstra AU','mobile'); add('+6140','Optus AU','mobile'); add('+6141','Optus AU','mobile');
+  add('+6142','Telstra AU','mobile'); add('+6143','Telstra AU','mobile'); add('+6144','Telstra AU','mobile');
+  add('+6145','Vodafone AU','mobile'); add('+6146','Telstra AU','mobile'); add('+6147','Telstra AU','mobile');
+  add('+6148','Telstra AU','mobile'); add('+6149','Telstra AU','mobile');
+  add('+612','Telstra AU','landline'); add('+613','Telstra AU','landline');
+  add('+611800','Freephone AU','toll_free'); add('+611300','Local Rate AU','toll_free');
+
+  // ── Canada ──
+  add('+1204','Bell Canada','mobile'); add('+1226','Rogers','mobile'); add('+1236','Telus','mobile');
+  add('+1249','Bell Canada','mobile'); add('+1250','Telus','mobile'); add('+1289','Rogers','mobile');
+  add('+1306','SaskTel','mobile'); add('+1343','Bell Canada','mobile'); add('+1365','Rogers','mobile');
+  add('+1403','Telus','mobile'); add('+1416','Rogers','mobile'); add('+1418','Bell Canada','mobile');
+  add('+1431','MTS','mobile'); add('+1437','Rogers','mobile'); add('+1438','Videotron','mobile');
+  add('+1450','Bell Canada','mobile'); add('+1506','Bell Aliant','mobile'); add('+1514','Bell Canada','mobile');
+  add('+1519','Rogers','mobile'); add('+1548','Rogers','mobile'); add('+1579','Bell Canada','mobile');
+  add('+1581','Bell Canada','mobile'); add('+1587','Telus','mobile'); add('+1604','Telus','mobile');
+  add('+1613','Bell Canada','mobile'); add('+1639','SaskTel','mobile'); add('+1647','Rogers','mobile');
+  add('+1672','Telus','mobile'); add('+1705','Bell Canada','mobile'); add('+1709','Bell Aliant','mobile');
+  add('+1742','Rogers','mobile'); add('+1778','Telus','mobile'); add('+1780','Telus','mobile');
+  add('+1782','Bell Aliant','mobile'); add('+1807','Bell Canada','mobile'); add('+1819','Bell Canada','mobile');
+  add('+1825','Telus','mobile'); add('+1867','Northwestel','mobile'); add('+1873','Bell Canada','mobile');
+  add('+1902','Bell Aliant','mobile'); add('+1905','Rogers','mobile');
+
+  // ── Mexico ──
+  add('+5255','Telcel','mobile'); add('+5233','Telcel','mobile'); add('+5281','AT&T MX','mobile');
+  add('+52664','Movistar MX','mobile'); add('+52998','Telcel','mobile');
+
+  // ── Argentina ──
+  add('+549','Personal AR','mobile'); add('+5411','Claro AR','mobile');
+
+  // ── Colombia ──
+  add('+57300','Claro CO','mobile'); add('+57301','Claro CO','mobile'); add('+57302','Claro CO','mobile');
+  add('+57310','Claro CO','mobile'); add('+57311','Claro CO','mobile'); add('+57312','Tigo CO','mobile');
+  add('+57313','Tigo CO','mobile'); add('+57314','Tigo CO','mobile'); add('+57315','Tigo CO','mobile');
+  add('+57316','Movistar CO','mobile'); add('+57317','Movistar CO','mobile'); add('+57318','ETB','mobile');
+  add('+57319','ETB','mobile'); add('+57320','Claro CO','mobile'); add('+57321','Claro CO','mobile');
+  add('+57322','Claro CO','mobile'); add('+57323','Claro CO','mobile'); add('+57324','Claro CO','mobile');
+  add('+57350','Claro CO','mobile');
+
+  // ── VoIP ranges ──
+  ['+1202555','+1212555','+1310555','+1415555','+1800555'].forEach(function(p){ add(p,'VoIP','voip'); });
+
+  return db;
+})();
+
+function detectCarrierLocal(number) {
+  // Normalize number
+  var n = number.replace(/[\s\-\(\)\.]/g,'');
+  if(!n.startsWith('+')) n = '+' + n;
+
+  // Try longest prefix first (6 chars), then shorter
+  for(var len = 7; len >= 3; len--) {
+    var prefix = n.substring(0, len);
+    if(CARRIER_DB[prefix]) return CARRIER_DB[prefix];
+  }
+
+  // Country-level fallback
+  var countryMap = {
+    '+1':    {carrier:'US/CA Carrier',   type:'mobile'},
+    '+7':    {carrier:'RU/KZ Carrier',   type:'mobile'},
+    '+20':   {carrier:'Egypt Carrier',   type:'mobile'},
+    '+27':   {carrier:'SA Carrier',      type:'mobile'},
+    '+30':   {carrier:'GR Carrier',      type:'mobile'},
+    '+31':   {carrier:'NL Carrier',      type:'mobile'},
+    '+32':   {carrier:'BE Carrier',      type:'mobile'},
+    '+33':   {carrier:'FR Carrier',      type:'mobile'},
+    '+34':   {carrier:'ES Carrier',      type:'mobile'},
+    '+36':   {carrier:'HU Carrier',      type:'mobile'},
+    '+39':   {carrier:'IT Carrier',      type:'mobile'},
+    '+40':   {carrier:'RO Carrier',      type:'mobile'},
+    '+41':   {carrier:'CH Carrier',      type:'mobile'},
+    '+43':   {carrier:'AT Carrier',      type:'mobile'},
+    '+44':   {carrier:'UK Carrier',      type:'mobile'},
+    '+45':   {carrier:'DK Carrier',      type:'mobile'},
+    '+46':   {carrier:'SE Carrier',      type:'mobile'},
+    '+47':   {carrier:'NO Carrier',      type:'mobile'},
+    '+48':   {carrier:'PL Carrier',      type:'mobile'},
+    '+49':   {carrier:'DE Carrier',      type:'mobile'},
+    '+51':   {carrier:'PE Carrier',      type:'mobile'},
+    '+52':   {carrier:'MX Carrier',      type:'mobile'},
+    '+53':   {carrier:'CU Carrier',      type:'mobile'},
+    '+54':   {carrier:'AR Carrier',      type:'mobile'},
+    '+55':   {carrier:'BR Carrier',      type:'mobile'},
+    '+56':   {carrier:'CL Carrier',      type:'mobile'},
+    '+57':   {carrier:'CO Carrier',      type:'mobile'},
+    '+58':   {carrier:'VE Carrier',      type:'mobile'},
+    '+60':   {carrier:'MY Carrier',      type:'mobile'},
+    '+61':   {carrier:'AU Carrier',      type:'mobile'},
+    '+62':   {carrier:'ID Carrier',      type:'mobile'},
+    '+63':   {carrier:'PH Carrier',      type:'mobile'},
+    '+64':   {carrier:'NZ Carrier',      type:'mobile'},
+    '+65':   {carrier:'SG Carrier',      type:'mobile'},
+    '+66':   {carrier:'TH Carrier',      type:'mobile'},
+    '+81':   {carrier:'JP Carrier',      type:'mobile'},
+    '+82':   {carrier:'KR Carrier',      type:'mobile'},
+    '+84':   {carrier:'VN Carrier',      type:'mobile'},
+    '+86':   {carrier:'CN Carrier',      type:'mobile'},
+    '+90':   {carrier:'TR Carrier',      type:'mobile'},
+    '+91':   {carrier:'IN Carrier',      type:'mobile'},
+    '+92':   {carrier:'PK Carrier',      type:'mobile'},
+    '+93':   {carrier:'AF Carrier',      type:'mobile'},
+    '+94':   {carrier:'LK Carrier',      type:'mobile'},
+    '+95':   {carrier:'MM Carrier',      type:'mobile'},
+    '+98':   {carrier:'IR Carrier',      type:'mobile'},
+    '+212':  {carrier:'MA Carrier',      type:'mobile'},
+    '+213':  {carrier:'DZ Carrier',      type:'mobile'},
+    '+216':  {carrier:'TN Carrier',      type:'mobile'},
+    '+218':  {carrier:'LY Carrier',      type:'mobile'},
+    '+220':  {carrier:'GM Carrier',      type:'mobile'},
+    '+221':  {carrier:'SN Carrier',      type:'mobile'},
+    '+233':  {carrier:'GH Carrier',      type:'mobile'},
+    '+234':  {carrier:'NG Carrier',      type:'mobile'},
+    '+237':  {carrier:'CM Carrier',      type:'mobile'},
+    '+251':  {carrier:'ET Carrier',      type:'mobile'},
+    '+254':  {carrier:'KE Carrier',      type:'mobile'},
+    '+255':  {carrier:'TZ Carrier',      type:'mobile'},
+    '+256':  {carrier:'UG Carrier',      type:'mobile'},
+    '+260':  {carrier:'ZM Carrier',      type:'mobile'},
+    '+263':  {carrier:'ZW Carrier',      type:'mobile'},
+    '+380':  {carrier:'UA Carrier',      type:'mobile'},
+    '+381':  {carrier:'RS Carrier',      type:'mobile'},
+    '+385':  {carrier:'HR Carrier',      type:'mobile'},
+    '+386':  {carrier:'SI Carrier',      type:'mobile'},
+    '+387':  {carrier:'BA Carrier',      type:'mobile'},
+    '+420':  {carrier:'CZ Carrier',      type:'mobile'},
+    '+421':  {carrier:'SK Carrier',      type:'mobile'},
+    '+966':  {carrier:'SA Carrier',      type:'mobile'},
+    '+971':  {carrier:'AE Carrier',      type:'mobile'},
+    '+972':  {carrier:'IL Carrier',      type:'mobile'},
+    '+974':  {carrier:'QA Carrier',      type:'mobile'},
+    '+998':  {carrier:'UZ Carrier',      type:'mobile'},
+  };
+  for(var cc in countryMap) {
+    if(n.startsWith(cc)) return countryMap[cc];
+  }
+  return null;
+}
+
+function getCountryFromNumber(number) {
+  var n = number.replace(/[\s\-\(\)\.]/g,'');
+  if(!n.startsWith('+')) n = '+' + n;
+  var ccMap = {
+    '+1':'US','+7':'RU','+20':'EG','+27':'ZA','+30':'GR','+31':'NL','+32':'BE','+33':'FR',
+    '+34':'ES','+36':'HU','+39':'IT','+40':'RO','+41':'CH','+43':'AT','+44':'GB','+45':'DK',
+    '+46':'SE','+47':'NO','+48':'PL','+49':'DE','+51':'PE','+52':'MX','+54':'AR','+55':'BR',
+    '+56':'CL','+57':'CO','+60':'MY','+61':'AU','+62':'ID','+63':'PH','+64':'NZ','+65':'SG',
+    '+66':'TH','+81':'JP','+82':'KR','+84':'VN','+86':'CN','+90':'TR','+91':'IN','+92':'PK',
+    '+94':'LK','+98':'IR','+212':'MA','+213':'DZ','+216':'TN','+221':'SN','+233':'GH',
+    '+234':'NG','+237':'CM','+251':'ET','+254':'KE','+255':'TZ','+256':'UG','+260':'ZM',
+    '+263':'ZW','+370':'LT','+371':'LV','+372':'EE','+373':'MD','+374':'AM','+375':'BY',
+    '+380':'UA','+381':'RS','+385':'HR','+386':'SI','+387':'BA','+420':'CZ','+421':'SK',
+    '+966':'SA','+971':'AE','+972':'IL','+974':'QA','+998':'UZ'
+  };
+  // Try longest first
+  for(var len=5;len>=2;len--) {
+    var pref = n.substring(0,len);
+    if(ccMap[pref]) return ccMap[pref];
+  }
+  return null;
+}
+
+// Auto-detect carrier for WA Checker rows (local only)
+function detectCarrierForRow(number, idx) {
+  var el = document.getElementById('carrier-'+idx);
+  if(!el) return;
+  var result = detectCarrierLocal(number);
+  if(result) {
+    var typeIcon = result.type==='mobile'?'📱':result.type==='landline'?'☎️':result.type==='voip'?'🌐':result.type==='toll_free'?'📞':result.type==='premium'?'💎':'📡';
+    el.className = 'carrier-chip';
+    el.title = result.carrier + ' · ' + result.type;
+    el.textContent = typeIcon + ' ' + result.carrier;
+  } else {
+    el.className = 'carrier-chip unknown';
+    el.textContent = '— Unknown';
+  }
+}
+
+// ── CARRIER DETECT TAB ────────────────────────────────────────────────────
+var cdResults = [];
+var cdRunning = false;
+var cdAbort = false;
+
+document.getElementById('cd-numbers').addEventListener('input', function(){
+  var n = this.value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;}).length;
+  document.getElementById('cd-count-badge').textContent = n + ' number' + (n!==1?'s':'');
+});
+
+function cdMethodChange() {
+  var m = document.getElementById('cd-method').value;
+  document.getElementById('cd-api-key-field').style.display = m==='local'?'none':'flex';
+  document.getElementById('cd-delay-field').style.display = m==='local'?'none':'flex';
+  if(m==='numverify') {
+    document.getElementById('cd-api-hint').innerHTML = 'Free key at <a href="https://numverify.com" target="_blank">numverify.com</a> — 100 req/month free';
+  } else if(m==='abstract') {
+    document.getElementById('cd-api-hint').innerHTML = 'Free key at <a href="https://www.abstractapi.com/phone-validation-api" target="_blank">abstractapi.com</a> — 250 req/month free';
+  }
+}
+
+async function cdDetectOne(number, method, apiKey) {
+  var n = number.replace(/[\s\-\(\)\.]/g,'');
+  if(!n.startsWith('+')) n = '+' + n;
+
+  if(method === 'local') {
+    var res = detectCarrierLocal(n);
+    var cc = getCountryFromNumber(n);
+    return {
+      number: n,
+      carrier: res ? res.carrier : 'Unknown',
+      type: res ? res.type : 'unknown',
+      country: cc || '—',
+      valid: !!res,
+      source: 'local'
+    };
+  }
+
+  if(method === 'numverify') {
+    try {
+      var clean = n.replace(/^\+/,'');
+      var url = 'http://apilayer.net/api/validate?access_key='+encodeURIComponent(apiKey)+'&number='+encodeURIComponent(clean)+'&format=1';
+      var resp = await fetch(url);
+      var data = await resp.json();
+      if(data.error) throw new Error(data.error.info || 'API error');
+      return {
+        number: n,
+        carrier: data.carrier || 'Unknown',
+        type: data.line_type || 'unknown',
+        country: data.country_code || '—',
+        country_name: data.country_name || '—',
+        valid: data.valid,
+        source: 'numverify'
+      };
+    } catch(e) {
+      // Fall back to local
+      var res = detectCarrierLocal(n);
+      return { number:n, carrier:res?res.carrier:'Unknown', type:res?res.type:'unknown', country:getCountryFromNumber(n)||'—', valid:!!res, source:'local (fallback)', error: e.message };
+    }
+  }
+
+  if(method === 'abstract') {
+    try {
+      var url2 = 'https://phonevalidation.abstractapi.com/v1/?api_key='+encodeURIComponent(apiKey)+'&phone='+encodeURIComponent(n);
+      var resp2 = await fetch(url2);
+      var data2 = await resp2.json();
+      if(data2.error) throw new Error(data2.error.message || 'API error');
+      return {
+        number: n,
+        carrier: data2.carrier || 'Unknown',
+        type: data2.type || 'unknown',
+        country: data2.country ? data2.country.code : '—',
+        country_name: data2.country ? data2.country.name : '—',
+        valid: data2.valid,
+        source: 'abstractapi'
+      };
+    } catch(e) {
+      var res2 = detectCarrierLocal(n);
+      return { number:n, carrier:res2?res2.carrier:'Unknown', type:res2?res2.type:'unknown', country:getCountryFromNumber(n)||'—', valid:!!res2, source:'local (fallback)', error: e.message };
+    }
+  }
+}
+
+async function cdStart() {
+  var nums = document.getElementById('cd-numbers').value
+    .split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  if(!nums.length) { toast('Enter at least one number','err'); return; }
+
+  var method = document.getElementById('cd-method').value;
+  var apiKey = document.getElementById('cd-api-key').value.trim();
+  if(method !== 'local' && !apiKey) { toast('Enter your API key first','err'); return; }
+  var delay = parseInt(document.getElementById('cd-delay').value)||500;
+
+  cdResults = [];
+  cdAbort = false;
+  cdRunning = true;
+  document.getElementById('cd-results').innerHTML = '';
+  document.getElementById('cd-empty') && (document.getElementById('cd-empty').style.display='none');
+  document.getElementById('cd-detect-btn').disabled = true;
+  document.getElementById('cd-stop-btn').classList.add('show');
+  document.getElementById('cd-prog-row').classList.add('show');
+
+  var stats = {total:0, found:0, mobile:0, landline:0, voip:0};
+
+  for(var i=0; i<nums.length; i++) {
+    if(cdAbort) break;
+    document.getElementById('cd-prog-txt').textContent = 'Detecting ' + (i+1) + ' / ' + nums.length;
+    var pct = Math.round((i+1)/nums.length*100);
+    document.getElementById('cd-prog-pct').textContent = pct + '%';
+    document.getElementById('cd-prog-fill').style.width = pct + '%';
+
+    var result = await cdDetectOne(nums[i], method, apiKey);
+    cdResults.push(result);
+    stats.total++;
+    if(result.carrier !== 'Unknown') stats.found++;
+    if(result.type==='mobile') stats.mobile++;
+    else if(result.type==='landline') stats.landline++;
+    else if(result.type==='voip') stats.voip++;
+
+    cdRenderRow(result, i+1);
+    cdUpdateKpis(stats);
+    document.getElementById('cd-res-count').textContent = cdResults.length + ' results';
+
+    if(method !== 'local' && i < nums.length-1) await new Promise(function(r){setTimeout(r, delay);});
+  }
+
+  cdRunning = false;
+  document.getElementById('cd-detect-btn').disabled = false;
+  document.getElementById('cd-stop-btn').classList.remove('show');
+  document.getElementById('cd-prog-row').classList.remove('show');
+  toast('Detection complete — ' + stats.found + ' / ' + stats.total + ' carriers identified', 'ok');
+}
+
+function cdStop() {
+  cdAbort = true; cdRunning = false;
+  document.getElementById('cd-detect-btn').disabled = false;
+  document.getElementById('cd-stop-btn').classList.remove('show');
+  document.getElementById('cd-prog-row').classList.remove('show');
+  toast('Stopped','warn');
+}
+
+function cdUpdateKpis(s) {
+  document.getElementById('cd-k-total').textContent = s.total;
+  document.getElementById('cd-k-found').textContent = s.found;
+  document.getElementById('cd-k-mobile').textContent = s.mobile;
+  document.getElementById('cd-k-landline').textContent = s.landline;
+  document.getElementById('cd-k-voip').textContent = s.voip;
+}
+
+function cdRenderRow(r, idx) {
+  var el = document.getElementById('cd-results');
+  var row = document.createElement('div');
+  row.className = 'cd-row';
+
+  var typeIcons = {mobile:'📱',landline:'☎️',voip:'🌐',toll_free:'📞',premium:'💎',unknown:'❓'};
+  var typeIcon = typeIcons[r.type] || '❓';
+  var badgeClass = 'cd-badge-'+(r.type==='mobile'?'mobile':r.type==='landline'?'landline':r.type==='voip'?'voip':r.type==='toll_free'?'toll_free':'unknown');
+
+  var flag = r.country && r.country!=='—'
+    ? '<span class="fi fi-'+r.country.toLowerCase()+'" style="font-size:13px" title="'+r.country+'"></span>'
+    : '<span style="color:var(--t3);font-size:10px">—</span>';
+
+  var sourceColor = r.source==='local'?'var(--t3)':r.source==='local (fallback)'?'var(--y)':'#00bcd4';
+  var sourceDot = '<span style="width:5px;height:5px;border-radius:50%;background:'+sourceColor+';display:inline-block;margin-left:4px;flex-shrink:0" title="Source: '+r.source+'"></span>';
+
+  row.innerHTML =
+    '<span style="font-size:10px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
+    + flag
+    + '<span style="font-size:11.5px;font-weight:500;color:var(--t1);font-family:var(--mono)">'+esc(r.number)+'</span>'
+    + '<div style="display:flex;align-items:center;gap:4px;min-width:0"><span class="cd-carrier-name" title="'+esc(r.carrier)+'">'+esc(r.carrier)+'</span>'+sourceDot+'</div>'
+    + '<span style="font-size:10px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.country_name||r.country||'—')+'</span>'
+    + '<span class="cd-carrier-badge '+badgeClass+'">'+typeIcon+' '+r.type+'</span>';
+
+  el.appendChild(row);
+}
+
+function cdCopyAll() {
+  if(!cdResults.length){ toast('No results','err'); return; }
+  var text = cdResults.map(function(r){ return r.number+'\t'+r.carrier+'\t'+r.type+'\t'+(r.country||'—'); }).join('\n');
+  navigator.clipboard.writeText(text).then(function(){ toast('Copied '+cdResults.length+' results','ok'); }).catch(function(){ toast('Copy failed','err'); });
+}
+
+function cdDownloadCsv() {
+  if(!cdResults.length){ toast('No results to export','err'); return; }
+  var rows = ['number,carrier,type,country,country_name,source'];
+  cdResults.forEach(function(r){
+    rows.push('"'+r.number+'","'+r.carrier+'","'+r.type+'","'+(r.country||'')+'","'+(r.country_name||'')+'","'+r.source+'"');
+  });
+  var blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'carrier_results_'+Date.now()+'.csv'; a.click();
+  toast('Downloaded CSV','ok');
+}
+
+function cdSendToChecker() {
+  if(!cdResults.length){ toast('No numbers to send','err'); return; }
+  var nums = cdResults.map(function(r){ return r.number; });
+  document.getElementById('num-ta').value = nums.join('\n');
+  updateCount();
+  switchTab('checker');
+  toast('Sent '+nums.length+' numbers to WA Checker','ok');
+}
+
+function cdClear() {
+  cdResults = [];
+  document.getElementById('cd-results').innerHTML = '<div class="pg-empty" id="cd-empty"><div class="pg-empty-icon">📡</div><div style="font-size:14px;font-weight:600;color:var(--t2)">Carrier Detection</div><div style="font-size:12px;text-align:center;max-width:280px;line-height:1.7;color:var(--t3)">Paste phone numbers on the left, choose detection method, and click <strong style="color:#00bcd4">Detect Carriers</strong></div></div>';
+  document.getElementById('cd-res-count').textContent = '0 results';
+  cdUpdateKpis({total:0,found:0,mobile:0,landline:0,voip:0});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
 renderCountryGrid();
 selectCountry('US');
-
-
-// ── AUTH ──────────────────────────────────────────────────────────────────
 var SESSION_KEY = 'wac_session';
 var userSession = null;
 
