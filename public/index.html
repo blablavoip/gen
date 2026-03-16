@@ -841,8 +841,10 @@ socket.on('accounts', function(list){
   var ready=list.filter(function(a){return a.state==='ready';}).length;
   document.getElementById('k-agents').textContent=ready;
   document.getElementById('btn-check').disabled=ready===0||checking;
-  document.getElementById('btn-add').disabled=list.length>=5;
-  if(addPending) addPending=false;
+  // Only disable Add if we already have 5 accounts in a non-removing state
+  var active=list.filter(function(a){return a.state!=='removing';}).length;
+  document.getElementById('btn-add').disabled=active>=5;
+  addPending=false;
 });
 socket.on('ready_count', function(d){
   document.getElementById('k-agents').textContent=d.count;
@@ -883,6 +885,7 @@ function renderAccounts(list){
     el.innerHTML='<div style="padding:18px 0;text-align:center;color:var(--t3);font-size:10px;line-height:1.7">No accounts.<br>Click <strong style="color:var(--g)">+ Add</strong> to start.</div>';
     return;
   }
+  var BLANK_PIC='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A//www.w3.org/2000/svg%22 viewBox%3D%220 0 24 24%22%3E%3Ccircle cx%3D%2212%22 cy%3D%228%22 r%3D%224%22 fill%3D%22%23ffffff25%22/%3E%3Cpath d%3D%22M4 20c0-4 3.6-7 8-7s8 3 8 7%22 fill%3D%22%23ffffff25%22/%3E%3C/svg%3E';
   el.innerHTML=list.map(function(a){
     var pct=a.loadingPct||0;
     var showProg=(a.state==='authenticated'||a.state==='loading')&&a.loadingPct!=null;
@@ -892,31 +895,39 @@ function renderAccounts(list){
     var locked=a.state==='removing'||a.state==='init';
     var btnR=(!locked&&a.state!=='qr')?'<button class="acbtn" onclick="restartAcct('+a.id+')" title="Restart">↺</button>':'';
     var btnX=!locked?'<button class="acbtn danger" onclick="logoutAcct('+a.id+')" title="Logout">✕</button>':'';
-    var picSrc=a.profilePic||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="%23ffffff20"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="%23ffffff20"/></svg>';
-    var profileHtml=isReady?
-      '<div class="ac-profile">'
-      +'<img class="ac-profile-pic" src="'+esc(picSrc)+'" alt="" onclick="openProfModal('+a.id+')" onerror="this.src=\'data:image/svg+xml,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\'><circle cx=\\\'12\\\' cy=\\\'8\\\' r=\\\'4\\\' fill=\\\'%23ffffff20\\\'/></svg>\'">'
-      +'<span class="ac-profile-name">'+(a.profileName?esc(a.profileName):'<span style="color:var(--t3);font-style:italic">No name</span>')+'</span>'
-      +'<button class="ac-profile-edit" onclick="openProfModal('+a.id+')">✏ Edit</button>'
-      +'</div>':'';
+    // Use /proxy-pic endpoint so WA CDN images load without CORS issues
+    var picSrc=a.profilePic
+      ? (a.profilePic.startsWith('data:') ? a.profilePic : '/proxy-pic?url='+encodeURIComponent(a.profilePic))
+      : BLANK_PIC;
+    var profileHtml=isReady
+      ?'<div class="ac-profile">'
+        +'<img class="ac-profile-pic" src="'+esc(picSrc)+'" alt="" loading="lazy" '
+        +'onclick="openProfModal('+a.id+')" '
+        +'onerror="this.onerror=null;this.src=\''+BLANK_PIC+'\'">'
+        +'<span class="ac-profile-name">'+(a.profileName?esc(a.profileName):'<span style="color:var(--t3);font-style:italic">No name</span>')+'</span>'
+        +'<button class="ac-profile-edit" onclick="openProfModal('+a.id+')">✏ Edit</button>'
+        +'</div>':'';
     return '<div class="ac s-'+a.state+'">'
       +'<div class="ac-head"><div class="ac-dot '+dotClass(a.state)+'"></div>'
       +'<div class="ac-info"><div class="ac-name">'+esc(a.label)+'</div><div class="ac-status">'+stateText(a)+'</div></div>'
       +'<div class="ac-btns">'+btnR+btnX+'</div></div>'
       +profileHtml
       +(showProg?'<div class="ac-prog"><div class="ac-prog-track"><div class="ac-prog-bar" style="width:'+pct+'%"></div></div><div class="ac-prog-txt">Syncing '+pct+'%…</div></div>':'')
-      +(showDisc?'<div class="ac-disc-banner">Session ended.<br><button onclick="restartAcct('+a.id+')">↺ Reconnect</button></div>':'')
+      +(showDisc?'<div class="ac-disc-banner">Session ended on phone.<br><button onclick="restartAcct('+a.id+')">↺ Reconnect</button></div>':'')
       +(showQr?'<div class="ac-qr-wrap"><img src="'+a.qr+'" alt="QR"><div class="ac-qr-hint">WhatsApp → Linked Devices<br>→ Link a Device</div></div>':'')
       +'</div>';
   }).join('');
 }
 function addAccount(){
   if(addPending) return;
-  if(acctState.length>=5){toast('Max 5 accounts','err');return;}
+  var active=acctState.filter(function(a){return a.state!=='removing';}).length;
+  if(active>=5){toast('Max 5 accounts','err');return;}
   addPending=true;
   document.getElementById('btn-add').disabled=true;
   socket.emit('add_account');
-  setTimeout(function(){addPending=false;},4000);
+  // addPending is cleared when 'accounts' socket event arrives
+  // Safety fallback: re-enable after 15s
+  setTimeout(function(){if(addPending){addPending=false;document.getElementById('btn-add').disabled=false;}},15000);
 }
 function logoutAcct(id){ if(!confirm('Sign out Account '+id+'?')) return; socket.emit('logout_account',{id:id}); }
 function restartAcct(id){ socket.emit('restart_account',{id:id}); toast('Restarting…','warn'); }
@@ -930,8 +941,14 @@ function openProfModal(id){
   if(!acc) return;
   document.getElementById('prof-modal-sub').textContent=acc.label;
   document.getElementById('prof-name-input').value=acc.profileName||'';
+  var BLANK='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A//www.w3.org/2000/svg%22 viewBox%3D%220 0 80 80%22%3E%3Ccircle cx%3D%2240%22 cy%3D%2228%22 r%3D%2218%22 fill%3D%22%23ffffff20%22/%3E%3Cpath d%3D%22M8 75c0-18 14.3-30 32-30s32 12 32 30%22 fill%3D%22%23ffffff20%22/%3E%3C/svg%3E';
   var pic=acc.profilePic||'';
-  document.getElementById('prof-pic-preview').src=pic||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="28" r="18" fill="%23ffffff20"/><path d="M8 75c0-18 14.3-30 32-30s32 12 32 30" fill="%23ffffff20"/></svg>';
+  var picSrc=pic
+    ? (pic.startsWith('data:') ? pic : '/proxy-pic?url='+encodeURIComponent(pic))
+    : BLANK;
+  var previewEl=document.getElementById('prof-pic-preview');
+  previewEl.src=picSrc;
+  previewEl.onerror=function(){ this.onerror=null; this.src=BLANK; };
   document.getElementById('prof-overlay').classList.add('open');
 }
 function closeProfModal(){ document.getElementById('prof-overlay').classList.remove('open'); profAcctId=null; profPicB64=null; }
