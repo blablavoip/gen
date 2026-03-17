@@ -1,5 +1,13 @@
 /**
- * WAProof v17 — minimal memory, fast QR, robust disconnect detection
+ * WAProof v20 — WhatsApp Validator & Bulk Tools
+ *
+ * Cross-platform: Windows · Linux · VPS · cPanel · Docker · Render
+ *
+ * Start:   node app.js                          (any platform)
+ *          pm2 start ecosystem.config.js        (production VPS)
+ *          install.bat                          (Windows first run)
+ *          bash install.sh                      (Linux/VPS first run)
+ *          bash install-cpanel.sh               (cPanel first run)
  */
 
 process.on('uncaughtException',  e => console.error('[CRASH]', e.message));
@@ -11,6 +19,7 @@ const socketIO = require('socket.io');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode   = require('qrcode');
 const cors     = require('cors');
+const os     = require('os');
 const fs       = require('fs');
 const path     = require('path');
 
@@ -88,21 +97,43 @@ function getCountryInfo(e164) {
 let _chromePath = null;
 function findChrome() {
   if (_chromePath) return _chromePath;
+
+  // 1. Honour explicit env var override (useful for cPanel / Docker / VPS)
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH || '';
+  if (envPath) {
+    try { if (fs.existsSync(envPath)) { _chromePath = envPath; return envPath; } } catch {}
+  }
+
   const candidates = [
-    '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser', '/usr/bin/chromium',
+    // Linux system installs
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/local/bin/chromium',
+    '/usr/local/bin/google-chrome',
+    '/snap/bin/chromium',
+    // Puppeteer bundled (works on Render, standard VPS with npm install)
     (() => { try { return require('puppeteer').executablePath(); } catch { return null; } })(),
+    // Windows — Chrome
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     (process.env.LOCALAPPDATA || '') + '\\Google\\Chrome\\Application\\chrome.exe',
+    (process.env.APPDATA      || '') + '\\Google\\Chrome\\Application\\chrome.exe',
+    // Windows — Edge (fallback)
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
     (process.env.LOCALAPPDATA || '') + '\\Microsoft\\Edge\\Application\\msedge.exe',
+    // macOS
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
   ].filter(Boolean);
+
   for (const p of candidates) {
     try { if (p && fs.existsSync(p)) { _chromePath = p; return p; } } catch {}
   }
+
+  // 2. Fallback: ask the OS shell
   try {
     const { execSync } = require('child_process');
     const cmd = process.platform === 'win32'
@@ -111,6 +142,7 @@ function findChrome() {
     const p = execSync(cmd, { encoding: 'utf8', timeout: 3000 }).split('\n')[0].trim();
     if (p && fs.existsSync(p)) { _chromePath = p; return p; }
   } catch {}
+
   return null;
 }
 
@@ -177,7 +209,7 @@ async function doCreateAccount(id) {
   }
 
   // Clean up any leftover chrome tmp dir from a previous crash
-  try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+  try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+id)}`, { recursive: true, force: true }); } catch {}
 
   const acc = {
     id, label: `Account ${id}`,
@@ -187,15 +219,15 @@ async function doCreateAccount(id) {
   accounts.set(id, acc);
   broadcast();
 
-  // Minimal Chromium flags for low-memory machines
+  // Platform-aware Chrome flags
+  // --single-process and --no-zygote cause crashes on some Windows & ARM builds
+  const isWindows = process.platform === 'win32';
   const puppeteerArgs = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',       // use /tmp instead of /dev/shm
+    '--disable-dev-shm-usage',
     '--disable-gpu',
     '--no-first-run',
-    '--no-zygote',
-    '--single-process',              // ← key for minimal memory: one process
     '--disable-extensions',
     '--disable-default-apps',
     '--disable-sync',
@@ -212,7 +244,9 @@ async function doCreateAccount(id) {
     '--ignore-certificate-errors',
     '--disable-features=VizDisplayCompositor,TranslateUI,BlinkGenPropertyTrees',
     '--memory-pressure-off',
-    `--user-data-dir=/tmp/chrome-wa-${id}`,
+    `--user-data-dir=${path.join(os.tmpdir(), 'chrome-wa-' + id)}`,
+    // Linux/VPS only: single-process reduces memory on constrained servers
+    ...(isWindows ? [] : ['--single-process', '--no-zygote']),
   ];
 
   const client = new Client({
@@ -306,7 +340,7 @@ async function doCreateAccount(id) {
 
     const c = acc.client; acc.client = null;
     setTimeout(() => safeDestroy(c), 500);
-    try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+    try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+id)}`, { recursive: true, force: true }); } catch {}
 
     if (reason === 'LOGOUT') {
       // User explicitly logged out — delete session, don't reconnect
@@ -329,6 +363,20 @@ async function doCreateAccount(id) {
     setTimeout(() => enqueueCreate(id), backoff);
   });
 
+  // ── Message ACK tracking (delivery + read receipts) ────────────────────────
+  // ACK levels: 0=error, 1=sent(✓), 2=delivered(✓✓), 3=read(✓✓ blue), 4=played
+  client.on('message_ack', (msg, ack) => {
+    if (!guard()) return;
+    const msgId = msg?.id?.id || msg?.id?._serialized || null;
+    if (!msgId) return;
+    io.emit('bs_ack', {
+      msgId,
+      ack,
+      ackLabel: (['Error','Sent','Delivered','Read','Played'])[ack] || String(ack),
+      number: msg?.to ? msg.to.replace('@c.us', '') : null,
+    });
+  });
+
   // Keep-alive: ping WhatsApp every 45s to detect stale connections before they silently drop
   const keepAliveInterval = setInterval(async () => {
     if (!guard() || acc.state !== 'ready') { clearInterval(keepAliveInterval); return; }
@@ -345,7 +393,7 @@ async function doCreateAccount(id) {
         acc.state = 'disconnected'; acc.dead = true; broadcast();
         const c2 = acc.client; acc.client = null;
         setTimeout(() => safeDestroy(c2), 200);
-        try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+        try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+id)}`, { recursive: true, force: true }); } catch {}
         accounts.delete(id);
         setTimeout(() => enqueueCreate(id), 3000);
       }
@@ -362,7 +410,7 @@ async function doCreateAccount(id) {
     if (msg.includes('already running') || msg.includes('userDataDir')) {
       acc.state = 'error'; broadcast();
       accounts.delete(id);
-      try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+      try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+id)}`, { recursive: true, force: true }); } catch {}
       // Retry after cleanup
       setTimeout(() => enqueueCreate(id), 4000);
       return;
@@ -387,7 +435,7 @@ async function logoutAccount(id) {
   }
 
   deleteSession(id);
-  try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+  try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+id)}`, { recursive: true, force: true }); } catch {}
   accounts.delete(id);
   broadcast();
   io.emit('toast', { msg: `Account ${id} logged out`, type: 'ok' });
@@ -572,7 +620,7 @@ io.on('connection', (socket) => {
     const client = acc.client; acc.client = null;
     accounts.delete(numId);
     await safeDestroy(client, 5000);
-    try { fs.rmSync(`/tmp/chrome-wa-${numId}`, { recursive: true, force: true }); } catch {}
+    try { fs.rmSync(`${path.join(os.tmpdir(), "chrome-wa-"+numId)}`, { recursive: true, force: true }); } catch {}
     setTimeout(() => enqueueCreate(numId), 1500);
   });
 
@@ -674,7 +722,6 @@ io.on('connection', (socket) => {
     if (accountId) {
       acc = accounts.get(parseInt(accountId));
     } else {
-      // fallback: first ready
       for (const a of accounts.values()) {
         if (a.state === 'ready' && a.client && !a.dead) { acc = a; break; }
       }
@@ -691,11 +738,54 @@ io.on('connection', (socket) => {
       }
       const wid = cleaned + '@c.us';
       console.log(`[bs_send_one] Sending to ${wid} via ${acc.label}`);
-      await acc.client.sendMessage(wid, message);
-      if (callback) callback({ ok: true, account: acc.label });
+
+      // ── 1. Check if number is on WhatsApp ──────────────────────────────────
+      let isRegistered = false;
+      try { isRegistered = await acc.client.isRegisteredUser(wid); } catch {}
+      if (!isRegistered) {
+        if (callback) callback({ ok: false, notFound: true, error: 'Not on WhatsApp' });
+        return;
+      }
+
+      // ── 2. Check if contact has blocked us ────────────────────────────────
+      // Note: WA doesn't expose a direct "blocked me" flag. We check our side.
+      let accountType = null;
+      let isBlocked = false;
+      try {
+        const contact = await acc.client.getContactById(wid);
+        isBlocked = contact?.isBlocked ?? false;
+        if (contact?.isEnterprise) accountType = 'enterprise';
+        else if (contact?.isBusiness) accountType = 'business';
+        else if (contact) accountType = 'personal';
+      } catch {}
+
+      // ── 3. Send message ───────────────────────────────────────────────────
+      const sentMsg = await acc.client.sendMessage(wid, message);
+      const msgId = sentMsg?.id?.id || sentMsg?.id?._serialized || null;
+
+      if (callback) callback({
+        ok: true,
+        account: acc.label,
+        accountType,
+        isBlocked,
+        msgId,
+        ack: 1,  // initial: sent (1 tick)
+      });
+
+      // Emit initial ACK immediately
+      if (msgId) {
+        socket.emit('bs_ack', { msgId, ack: 1, number });
+      }
+
     } catch (err) {
       console.error(`[bs_send_one] Failed ${number}:`, err.message);
-      if (callback) callback({ ok: false, error: err.message });
+      // Detect "No LID" = number not found / not registered
+      const notFound = err.message && (
+        err.message.includes('No LID') ||
+        err.message.includes('not a contact') ||
+        err.message.includes('invalid wid')
+      );
+      if (callback) callback({ ok: false, notFound, error: notFound ? 'Not on WhatsApp' : err.message });
     }
   });
 });

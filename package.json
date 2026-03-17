@@ -1,14 +1,24 @@
 {
-  "name": "wa-checker",
-  "version": "17.0.0",
+  "name": "waproof",
+  "version": "20.0.0",
+  "description": "WAProof — WhatsApp validator & bulk tools",
   "main": "app.js",
-  "scripts": { "start": "node app.js" },
+  "scripts": {
+    "start":        "node app.js",
+    "start:pm2":    "pm2 start ecosystem.config.js --env production",
+    "stop:pm2":     "pm2 stop waproof",
+    "restart:pm2":  "pm2 restart waproof",
+    "logs:pm2":     "pm2 logs waproof",
+    "install:linux":"bash install.sh",
+    "dev":          "node app.js"
+  },
   "engines": { "node": ">=18.0.0" },
   "dependencies": {
     "whatsapp-web.js": "^1.23.0",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "cors": "^2.8.5",
-    "qrcode": "^1.5.3"
+    "express":         "^4.18.2",
+    "socket.io":       "^4.7.2",
+    "cors":            "^2.8.5",
+    "qrcode":          "^1.5.3",
+    "puppeteer":       "^21.11.0"
   }
 }
