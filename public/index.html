@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WAProof v18</title>
 <script src="/socket.io/socket.io.js"></script>
+<script src="https://js.puter.com/v2/"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/css/flag-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -556,6 +557,67 @@ body.dark .ac-qr-wrap{background:var(--s2)}
 /* Info badge */
 .info-badge{display:flex;gap:8px;padding:9px 12px;background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.15);border-radius:8px;font-size:10px;color:var(--b2);line-height:1.6}
 .info-badge .material-symbols-outlined{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* ── AI GENERATION PANEL ── */
+.ai-panel{background:linear-gradient(135deg,rgba(106,27,154,.06),rgba(0,121,107,.04));border:1.5px solid rgba(106,27,154,.2);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
+.ai-panel-title{font-size:9px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.ai-panel-title .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--p);animation:pulse 1.5s infinite}
+.ai-toggle-row{display:flex;align-items:center;gap:8px}
+.ai-toggle-label{font-size:10px;color:var(--t2);flex:1}
+.ai-switch{position:relative;width:34px;height:18px;flex-shrink:0}
+.ai-switch input{opacity:0;width:0;height:0}
+.ai-slider{position:absolute;inset:0;background:var(--border2);border-radius:18px;cursor:pointer;transition:.2s}
+.ai-slider:before{content:'';position:absolute;width:12px;height:12px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.ai-slider{background:var(--p)}
+input:checked+.ai-slider:before{transform:translateX(16px)}
+.ai-prompt-area{display:flex;flex-direction:column;gap:5px}
+.ai-prompt-ta{width:100%;background:var(--surface);border:1.5px solid rgba(106,27,154,.25);border-radius:var(--radius-sm);padding:8px 10px;font-family:var(--font);font-size:10px;color:var(--t1);resize:none;height:60px;outline:none;line-height:1.6;caret-color:var(--p)}
+.ai-prompt-ta:focus{border-color:rgba(106,27,154,.5)}
+.ai-prompt-ta::placeholder{color:var(--t4)}
+.ai-gen-row{display:flex;gap:5px;align-items:center}
+.ai-gen-btn{height:28px;padding:0 12px;background:linear-gradient(135deg,#6a1b9a,var(--p));border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font);font-size:9px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ai-gen-btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(106,27,154,.3)}
+.ai-gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.ai-rotate-field{display:flex;align-items:center;gap:6px;flex:1}
+.ai-rotate-label{font-size:9px;color:var(--t3);white-space:nowrap}
+.ai-rotate-input{width:44px;height:24px;background:var(--s1);border:1.5px solid var(--border);border-radius:5px;padding:0 6px;font-family:var(--mono);font-size:10px;color:var(--t1);outline:none;text-align:center}
+.ai-status{font-size:9px;color:var(--t3);min-height:14px;font-style:italic}
+.ai-status.ok{color:var(--g);font-style:normal}
+.ai-status.err{color:var(--r);font-style:normal}
+.ai-status.spin{color:var(--p)}
+
+/* ── FILE ATTACHMENT PANEL ── */
+.file-panel{background:rgba(21,101,192,.04);border:1.5px solid rgba(21,101,192,.18);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
+.file-panel-title{font-size:9px;font-weight:700;color:var(--b2);text-transform:uppercase;letter-spacing:.1em}
+.file-drop-zone{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.file-drop-zone:hover,.file-drop-zone.drag-over{border-color:var(--b2);background:var(--b-bg)}
+.file-drop-zone-txt{font-size:10px;color:var(--t3);line-height:1.7}
+.file-drop-zone-txt strong{color:var(--b2)}
+.file-preview{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--b-bg);border:1px solid rgba(21,101,192,.18);border-radius:var(--radius-sm)}
+.file-preview-icon{font-size:20px;flex-shrink:0}
+.file-preview-info{flex:1;min-width:0}
+.file-preview-name{font-size:10px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-preview-size{font-size:9px;color:var(--t3)}
+.file-preview-rm{background:none;border:none;cursor:pointer;color:var(--r);font-size:14px;padding:0 2px;flex-shrink:0}
+
+/* ── DYNAMIC CONTENT PANEL ── */
+.dyn-panel{background:rgba(0,121,107,.04);border:1.5px solid rgba(0,121,107,.18);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
+.dyn-panel-title{font-size:9px;font-weight:700;color:var(--cy);text-transform:uppercase;letter-spacing:.1em}
+.dyn-tag-row{display:flex;flex-wrap:wrap;gap:5px}
+.dyn-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--cy-bg);border:1px solid rgba(0,121,107,.2);border-radius:100px;font-size:9px;color:var(--cy);cursor:pointer;transition:all .12s;font-family:var(--mono)}
+.dyn-tag:hover{background:rgba(0,121,107,.12);transform:translateY(-1px)}
+.dyn-hint{font-size:9px;color:var(--t4);line-height:1.6}
+
+/* ── ADVANCED ANTI-DETECTION ── */
+.adv-panel{background:rgba(176,106,0,.04);border:1.5px solid rgba(176,106,0,.18);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
+.adv-panel-title{font-size:9px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.1em}
+.adv-toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.adv-toggle{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--surface);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:all .15s}
+.adv-toggle.on{border-color:rgba(176,106,0,.35);background:rgba(176,106,0,.06)}
+.adv-toggle-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .15s}
+.adv-toggle.on .adv-toggle-dot{background:var(--y)}
+.adv-toggle-lbl{font-size:9px;color:var(--t2);font-weight:500;line-height:1.3}
+.adv-toggle.on .adv-toggle-lbl{color:var(--y)}
 </style>
 </head>
 <body>
@@ -1037,6 +1099,127 @@ body.dark .ac-qr-wrap{background:var(--s2)}
                   <option value="business">🏢 Business accounts only</option>
                   <option value="enterprise">🏛 Enterprise only</option>
                 </select>
+              </div>
+
+              <!-- ── AI MESSAGE GENERATION ── -->
+              <div class="ai-panel">
+                <div class="ai-panel-title">
+                  <span class="ai-dot"></span>
+                  AI Message Generation
+                  <span style="margin-left:auto">
+                    <label class="ai-switch" title="Enable AI message generation">
+                      <input type="checkbox" id="ai-enabled" onchange="aiToggle()">
+                      <span class="ai-slider"></span>
+                    </label>
+                  </span>
+                </div>
+                <div id="ai-body" style="display:none;flex-direction:column;gap:8px">
+                  <div class="ai-prompt-area">
+                    <div style="font-size:9px;color:var(--t3);margin-bottom:3px">Describe the message you want to send:</div>
+                    <textarea class="ai-prompt-ta" id="ai-prompt" placeholder="e.g. A friendly promotional message about our summer sale with 20% discount..."></textarea>
+                  </div>
+                  <div class="ai-gen-row">
+                    <button class="ai-gen-btn" id="ai-gen-btn" onclick="aiGenerate()">
+                      <span class="material-symbols-outlined" style="font-size:12px">auto_awesome</span>
+                      Generate Now
+                    </button>
+                    <div class="ai-rotate-field">
+                      <span class="ai-rotate-label">Regenerate every</span>
+                      <input class="ai-rotate-input" id="ai-rotate-n" type="number" value="5" min="1" max="100">
+                      <span class="ai-rotate-label">sends</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <select class="bs-select" id="ai-model" style="flex:1;height:26px;font-size:9px;padding:0 8px">
+                      <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini</option>
+                      <option value="claude-3-5-haiku">Claude 3.5 Haiku</option>
+                      <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                    </select>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3);white-space:nowrap">
+                      <input type="checkbox" id="ai-keep-links" checked style="accent-color:var(--p)"> Keep links
+                    </label>
+                  </div>
+                  <div class="ai-status" id="ai-status">AI ready — generate a message or enable auto-rotate</div>
+                </div>
+              </div>
+
+              <!-- ── FILE ATTACHMENT ── -->
+              <div class="file-panel">
+                <div class="file-panel-title">📎 File Attachment</div>
+                <div class="file-drop-zone" id="file-drop-zone"
+                  ondragover="fileDragOver(event)"
+                  ondragleave="fileDragLeave(event)"
+                  ondrop="fileDrop(event)"
+                  onclick="document.getElementById('file-input').click()">
+                  <div class="file-drop-zone-txt">
+                    <strong>Click to browse</strong> or drag &amp; drop<br>
+                    Images · PDF · Video · Audio · Documents
+                  </div>
+                </div>
+                <input type="file" id="file-input" style="display:none"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.mp4,.mp3,.ogg,.aac,.zip"
+                  onchange="fileSelected(this)">
+                <div id="file-preview" style="display:none"></div>
+                <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--t3);cursor:pointer">
+                  <input type="checkbox" id="file-caption-mode" style="accent-color:var(--b2)">
+                  Use message text as caption (file + caption in one message)
+                </label>
+              </div>
+
+              <!-- ── DYNAMIC CONTENT ── -->
+              <div class="dyn-panel">
+                <div class="dyn-panel-title">🔀 Dynamic Content — per-recipient uniqueness</div>
+                <div style="font-size:9px;color:var(--t3);margin-bottom:2px">Click a tag to insert into your message:</div>
+                <div class="dyn-tag-row">
+                  <span class="dyn-tag" onclick="dynInsert('{rand_id}')">rand_id</span>
+                  <span class="dyn-tag" onclick="dynInsert('{rand_word}')">rand_word</span>
+                  <span class="dyn-tag" onclick="dynInsert('{rand_num}')">rand_num</span>
+                  <span class="dyn-tag" onclick="dynInsert('{rand_emoji}')">rand_emoji</span>
+                  <span class="dyn-tag" onclick="dynInsert('{timestamp}')">timestamp</span>
+                  <span class="dyn-tag" onclick="dynInsert('{date}')">date</span>
+                  <span class="dyn-tag" onclick="dynInsert('{url_track}')">url_track</span>
+                  <span class="dyn-tag" onclick="dynInsert('{zero_width}')">zero_width</span>
+                </div>
+                <div class="dyn-hint">
+                  <strong style="color:var(--cy)">url_track</strong> — appends ?ref=XXXX to your first URL so each message has a unique link<br>
+                  <strong style="color:var(--cy)">zero_width</strong> — inserts invisible Unicode chars to make each message fingerprint unique
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;margin-top:2px">
+                  <span style="font-size:9px;color:var(--t3)">Custom URL base:</span>
+                  <input class="ai-rotate-input" id="dyn-url-base" placeholder="https://yoursite.com" style="flex:1;width:auto;text-align:left;font-size:9px;font-family:var(--mono)">
+                </div>
+              </div>
+
+              <!-- ── ADVANCED ANTI-DETECTION ── -->
+              <div class="adv-panel">
+                <div class="adv-panel-title">🛡 Advanced Anti-Detection</div>
+                <div class="adv-toggle-grid">
+                  <div class="adv-toggle on" id="adv-unicode" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Unicode variation<br><span style="opacity:.7;font-size:8px">Slight char variants</span></div>
+                  </div>
+                  <div class="adv-toggle on" id="adv-zero-width" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Zero-width chars<br><span style="opacity:.7;font-size:8px">Invisible uniqueness</span></div>
+                  </div>
+                  <div class="adv-toggle" id="adv-typing-real" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Typing simulation<br><span style="opacity:.7;font-size:8px">Natural timing</span></div>
+                  </div>
+                  <div class="adv-toggle on" id="adv-case-vary" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Case variation<br><span style="opacity:.7;font-size:8px">Minor word caps</span></div>
+                  </div>
+                  <div class="adv-toggle" id="adv-read-before" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Read presence<br><span style="opacity:.7;font-size:8px">Simulate reading</span></div>
+                  </div>
+                  <div class="adv-toggle on" id="adv-punctuate" onclick="advToggle(this)">
+                    <div class="adv-toggle-dot"></div>
+                    <div class="adv-toggle-lbl">Punctuation vary<br><span style="opacity:.7;font-size:8px">Minor differences</span></div>
+                  </div>
+                </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:5px;padding-top:4px">
                 <button class="bs-send-btn" id="bs-send-btn" onclick="bsStart()">
@@ -2798,6 +2981,271 @@ function bsGetAccount(){
   return acc||null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// AI MESSAGE GENERATION (Puter.js)
+// ─────────────────────────────────────────────────────────────────────────
+var _aiCurrentMessage = '';   // latest AI-generated message
+var _aiSendCounter    = 0;    // tracks sends since last AI generation
+var _aiRotateN        = 5;    // regenerate every N sends
+
+function aiToggle(){
+  var on = document.getElementById('ai-enabled').checked;
+  var body = document.getElementById('ai-body');
+  body.style.display = on ? 'flex' : 'none';
+}
+
+async function aiGenerate(){
+  var prompt    = document.getElementById('ai-prompt').value.trim();
+  var model     = document.getElementById('ai-model').value;
+  var keepLinks = document.getElementById('ai-keep-links').checked;
+  var origMsg   = document.getElementById('bs-message').value.trim();
+
+  if(!prompt){ toast('Enter an AI prompt first','err'); return; }
+
+  var statusEl = document.getElementById('ai-status');
+  var btn      = document.getElementById('ai-gen-btn');
+  btn.disabled = true;
+  statusEl.className = 'ai-status spin';
+  statusEl.textContent = '✦ Generating message…';
+
+  // Extract links from original message to preserve them
+  var links = [];
+  if(keepLinks && origMsg){
+    var urlRe = /https?:\/\/[^\s]+/g;
+    links = origMsg.match(urlRe) || [];
+  }
+
+  var systemPrompt = 'You are a professional message writer for WhatsApp. Write a single natural, engaging message.'
+    +' No subject line. No "Dear..." greeting unless specified. No markdown. Plain text only.'
+    +' Keep it concise (2–5 sentences max) unless the user asks for more.'
+    +(links.length ? ' You MUST include these exact URLs in your message: '+links.join(' ')+'. Do not modify the URLs.' : '');
+
+  try {
+    if(typeof puter === 'undefined') throw new Error('Puter not loaded');
+    var response = await puter.ai.chat(prompt, { model: model, systemPrompt: systemPrompt });
+    var text = (typeof response === 'string') ? response : (response?.message?.content || response?.content || String(response));
+    // Clean up any residual markdown
+    text = text.replace(/\*\*/g,'').replace(/^\s*[-•]\s/gm,'').trim();
+    _aiCurrentMessage = text;
+    document.getElementById('bs-message').value = text;
+    bsPreviewMessage();
+    statusEl.className = 'ai-status ok';
+    statusEl.textContent = '✓ Message generated — you can edit it above';
+  } catch(e){
+    statusEl.className = 'ai-status err';
+    statusEl.textContent = '✗ ' + (e.message || 'AI generation failed');
+  }
+  btn.disabled = false;
+}
+
+// Called during bsStart loop to check if AI rotation is needed
+async function aiMaybeRotate(currentMsg){
+  if(!document.getElementById('ai-enabled')?.checked) return currentMsg;
+  _aiRotateN = parseInt(document.getElementById('ai-rotate-n').value)||5;
+  _aiSendCounter++;
+  if(_aiSendCounter < _aiRotateN) return currentMsg;
+  _aiSendCounter = 0;
+  // Generate new message in background
+  var statusEl = document.getElementById('ai-status');
+  if(statusEl){ statusEl.className='ai-status spin'; statusEl.textContent='✦ Auto-regenerating…'; }
+  await aiGenerate();
+  return document.getElementById('bs-message').value.trim() || currentMsg;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FILE ATTACHMENT
+// ─────────────────────────────────────────────────────────────────────────
+var _bsAttachment = null; // { data:base64, mimetype, filename, size, icon }
+
+var FILE_ICONS = {
+  'image':'🖼️','pdf':'📄','video':'🎥','audio':'🎵',
+  'application/pdf':'📄','text':'📝','zip':'🗜️','default':'📎'
+};
+
+function fileGetIcon(mime){
+  if(!mime) return FILE_ICONS.default;
+  if(mime.startsWith('image/')) return FILE_ICONS.image;
+  if(mime.startsWith('video/')) return FILE_ICONS.video;
+  if(mime.startsWith('audio/')) return FILE_ICONS.audio;
+  if(mime === 'application/pdf') return FILE_ICONS.pdf;
+  if(mime.startsWith('text/')) return FILE_ICONS.text;
+  if(mime.includes('zip')||mime.includes('compressed')) return FILE_ICONS.zip;
+  return FILE_ICONS.default;
+}
+
+function fileFormatSize(bytes){
+  if(bytes<1024) return bytes+'B';
+  if(bytes<1048576) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/1048576).toFixed(1)+'MB';
+}
+
+function fileDragOver(e){ e.preventDefault(); document.getElementById('file-drop-zone').classList.add('drag-over'); }
+function fileDragLeave(e){ document.getElementById('file-drop-zone').classList.remove('drag-over'); }
+function fileDrop(e){
+  e.preventDefault();
+  document.getElementById('file-drop-zone').classList.remove('drag-over');
+  var file = e.dataTransfer.files[0];
+  if(file) fileLoad(file);
+}
+function fileSelected(input){
+  var file = input.files[0];
+  if(file) fileLoad(file);
+  input.value = '';
+}
+function fileLoad(file){
+  var maxMB = 16;
+  if(file.size > maxMB * 1024 * 1024){ toast('File too large (max '+maxMB+'MB)','err'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var b64 = e.target.result.split(',')[1];
+    _bsAttachment = { data: b64, mimetype: file.type||'application/octet-stream', filename: file.name, size: file.size };
+    fileShowPreview();
+    toast('File attached: '+file.name,'ok');
+  };
+  reader.readAsDataURL(file);
+}
+function fileShowPreview(){
+  if(!_bsAttachment){ document.getElementById('file-preview').style.display='none'; return; }
+  var icon = fileGetIcon(_bsAttachment.mimetype);
+  document.getElementById('file-preview').style.display='flex';
+  document.getElementById('file-preview').innerHTML=
+    '<div class="file-preview">'
+    +'<span class="file-preview-icon">'+icon+'</span>'
+    +'<div class="file-preview-info"><div class="file-preview-name">'+esc(_bsAttachment.filename)+'</div>'
+    +'<div class="file-preview-size">'+esc(_bsAttachment.mimetype)+' · '+fileFormatSize(_bsAttachment.size)+'</div></div>'
+    +'<button class="file-preview-rm" onclick="fileRemove()" title="Remove">✕</button>'
+    +'</div>';
+}
+function fileRemove(){
+  _bsAttachment = null;
+  document.getElementById('file-preview').style.display='none';
+  document.getElementById('file-preview').innerHTML='';
+  document.getElementById('file-drop-zone').style.display='';
+  toast('Attachment removed','ok');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DYNAMIC CONTENT ENGINE
+// ─────────────────────────────────────────────────────────────────────────
+var _RAND_WORDS = ['hello','hey','greetings','hi','good day','warm regards',
+  'just','quick','friendly','special','exclusive','limited','great','amazing'];
+var _RAND_EMOJI = ['😊','👋','✅','🎯','💡','🌟','🔥','💬','📱','🎁','💎','⚡','🚀','✨'];
+var _ZW_CHARS   = ['\u200b','\u200c','\u200d','\u2060','\ufeff'];
+
+function dynInsert(tag){
+  var ta = document.getElementById('bs-message');
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  var val = ta.value;
+  ta.value = val.slice(0,start) + tag + val.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + tag.length;
+  ta.focus();
+  bsPreviewMessage();
+}
+
+function dynApply(msg, num){
+  var urlBase = (document.getElementById('dyn-url-base')?.value||'').trim();
+  // {rand_id} — 8-char alphanumeric unique ID
+  msg = msg.replace(/\{rand_id\}/g, function(){
+    return Math.random().toString(36).slice(2,10).toUpperCase();
+  });
+  // {rand_word} — random word from list
+  msg = msg.replace(/\{rand_word\}/g, function(){
+    return _RAND_WORDS[Math.floor(Math.random()*_RAND_WORDS.length)];
+  });
+  // {rand_num} — random 4-digit number
+  msg = msg.replace(/\{rand_num\}/g, function(){
+    return String(Math.floor(1000+Math.random()*9000));
+  });
+  // {rand_emoji} — random emoji
+  msg = msg.replace(/\{rand_emoji\}/g, function(){
+    return _RAND_EMOJI[Math.floor(Math.random()*_RAND_EMOJI.length)];
+  });
+  // {timestamp} — unix ms
+  msg = msg.replace(/\{timestamp\}/g, Date.now().toString());
+  // {date} — readable date
+  msg = msg.replace(/\{date\}/g, new Date().toLocaleDateString());
+  // {url_track} — appends ?ref=XXXX to custom URL or first URL in message
+  msg = msg.replace(/\{url_track\}/g, function(){
+    var ref = Math.random().toString(36).slice(2,8).toUpperCase();
+    if(urlBase) return urlBase+'?ref='+ref;
+    return '?ref='+ref;
+  });
+  // Append ?ref= to first URL in message if urlBase set and not already there
+  if(urlBase && !msg.includes(urlBase)){
+    var ref = Math.random().toString(36).slice(2,8).toUpperCase();
+    msg = msg.replace(/(https?:\/\/[^\s]+)/, function(url){
+      return url+(url.includes('?')?'&':'?')+'ref='+ref;
+    });
+  }
+  // {zero_width} — insert invisible chars
+  msg = msg.replace(/\{zero_width\}/g, function(){
+    return _ZW_CHARS[Math.floor(Math.random()*_ZW_CHARS.length)];
+  });
+  return msg;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ADVANCED ANTI-DETECTION ENGINE
+// ─────────────────────────────────────────────────────────────────────────
+function advToggle(el){ el.classList.toggle('on'); }
+function advIsOn(id){ return document.getElementById(id)?.classList.contains('on'); }
+
+// Unicode variation — swap some chars with visually identical Unicode variants
+var _UNICODE_MAP = {
+  'a':['а','ɑ'],'e':['е','ё'],'o':['о','ο'],'i':['і','ɩ'],'c':['с','ϲ'],
+  'p':['р','ρ'],'x':['х','χ'],'s':['ѕ'],'A':['А'],'E':['Е'],'O':['О']
+};
+function advUnicodeVariate(msg){
+  return msg.replace(/[aecoipxsAEO]/g, function(ch){
+    var alts = _UNICODE_MAP[ch];
+    if(!alts || Math.random()>0.25) return ch; // only swap 25% of occurrences
+    return alts[Math.floor(Math.random()*alts.length)];
+  });
+}
+
+// Zero-width char injection — insert 1-2 invisible chars at random word boundaries
+function advZeroWidth(msg){
+  var words = msg.split(' ');
+  return words.map(function(w,i){
+    if(i>0 && Math.random()<0.3){
+      return _ZW_CHARS[Math.floor(Math.random()*_ZW_CHARS.length)] + w;
+    }
+    return w;
+  }).join(' ');
+}
+
+// Case variation — randomly capitalize a word here and there (not all caps)
+function advCaseVary(msg){
+  return msg.replace(/\b[a-z]{4,}\b/g, function(w){
+    if(Math.random()<0.12) return w.charAt(0).toUpperCase()+w.slice(1);
+    return w;
+  });
+}
+
+// Punctuation variation — slight differences (double space, trailing period variance)
+function advPunctuate(msg){
+  // Randomly add/remove trailing period
+  if(Math.random()<0.4){
+    if(msg.endsWith('.')) msg = msg.slice(0,-1);
+    else if(!msg.match(/[!?…]$/)) msg = msg + '.';
+  }
+  // Random double space in one place
+  if(Math.random()<0.3){
+    msg = msg.replace(/(\w)  (\w)/,' $1 $2')
+             .replace(/(\w) (\w)/,function(_,a,b){ return Math.random()<0.1?a+'  '+b:a+' '+b; });
+  }
+  return msg;
+}
+
+// Master anti-detection transform — applies enabled techniques
+function advApply(msg){
+  if(advIsOn('adv-unicode'))    msg = advUnicodeVariate(msg);
+  if(advIsOn('adv-zero-width')) msg = advZeroWidth(msg);
+  if(advIsOn('adv-case-vary'))  msg = advCaseVary(msg);
+  if(advIsOn('adv-punctuate'))  msg = advPunctuate(msg);
+  return msg;
+}
+
 // ── Start sending ─────────────────────────────────────────────────────────
 async function bsStart(){
   if(bsRunning){ toast('Already running','err'); return; }
@@ -2844,11 +3292,14 @@ async function bsStart(){
 
   var useSpintax  = document.getElementById('bs-opt-spintax').classList.contains('on');
   var useRotate   = document.getElementById('bs-opt-rotate').classList.contains('on') && document.getElementById('bs-account-mode').value==='auto';
+  var useAI       = document.getElementById('ai-enabled')?.checked || false;
+  var useCaption  = document.getElementById('file-caption-mode')?.checked || false;
   var delayMs     = parseInt(document.getElementById('bs-delay').value)*1000;
   var jitterMs    = parseInt(document.getElementById('bs-jitter').value)*1000;
   var batchN      = parseInt(document.getElementById('bs-batch-n').value)||0;
   var batchPause  = parseInt(document.getElementById('bs-batch-pause').value)*1000||60000;
   var rotateN     = parseInt(document.getElementById('bs-rotate-n').value)||10;
+  _aiSendCounter  = 0;  // reset AI rotation counter
 
   // Reset state
   bsLog=[]; bsMsgIdMap={}; bsAbort=false; bsPaused=false; bsRunning=true;
@@ -2904,23 +3355,42 @@ async function bsStart(){
       continue;
     }
 
+    // ── AI message rotation ───────────────────────────────────────────────
+    if(useAI) msgTemplate = await aiMaybeRotate(msgTemplate);
+
     // Build message (spintax, variable substitution)
     var msg=useSpintax?bsSpintax(msgTemplate):msgTemplate;
-    // Replace variables
+    // Replace {name}, {number}, {status} variables
     var contactData=allResults.find(function(r){return (r.e164||r.number)===num;})||{};
     msg=msg.replace(/\{name\}/g, contactData.name||'');
     msg=msg.replace(/\{number\}/g, num);
     msg=msg.replace(/\{status\}/g, contactData.status||'');
+    // ── Dynamic content (per-recipient uniqueness) ────────────────────────
+    msg = dynApply(msg, num);
+    // ── Advanced anti-detection transforms ───────────────────────────────
+    msg = advApply(msg);
+
+    // Determine media payload
+    var mediaPayload = null;
+    if(_bsAttachment){
+      mediaPayload = {
+        data     : _bsAttachment.data,
+        mimetype : _bsAttachment.mimetype,
+        filename : _bsAttachment.filename,
+      };
+    }
 
     // Send
     var logEntry={
       number:num, status:'wait', account:acc.label,
       country:contactData.country||getIsoFromNumber(num)||null,
       accountType:contactData.accountType||null,
-      carrier:null,   // will be enriched by API asynchronously
+      carrier:null,
       waStatus:contactData.status||null,
       time:new Date().toISOString(),
-      _apiData:null
+      _apiData:null,
+      hasFile: !!mediaPayload,
+      fileName: mediaPayload ? _bsAttachment.filename : null
     };
     // Kick off API enrichment in background (non-blocking)
     parsePhoneAPI(num).then(function(d){
@@ -2928,21 +3398,44 @@ async function bsStart(){
       logEntry._apiData = d;
       logEntry.carrier = d.carrier ? {carrier:d.carrier,type:d.type||''} : logEntry.carrier;
       if(!logEntry.country && d.region_code) logEntry.country = d.region_code;
-      // Re-render row with enriched data
       var rowEl = document.getElementById('bs-row-'+(bsLog.indexOf(logEntry)+1));
       if(rowEl) bsFillRow(rowEl, logEntry, bsLog.indexOf(logEntry)+1);
     });
     bsLog.push(logEntry);
     bsRenderLogRow(logEntry, i+1);
 
+    // Typing simulation (anti-detection)
+    if(advIsOn('adv-typing-real') || document.getElementById('bs-opt-typing').classList.contains('on')){
+      var typingDelay = Math.min(2000, Math.max(500, msg.length * 25 + Math.random()*500));
+      await bsSleep(typingDelay);
+    }
+
+    // Read presence simulation (anti-detection) — small random pre-send pause
+    if(advIsOn('adv-read-before')){
+      await bsSleep(800 + Math.random()*1200);
+    }
+
     try{
-      var sendResult = await new Promise(function(resolve,reject){
-        var msgTimeout=setTimeout(function(){ reject(new Error('Timeout')); }, 30000);
-        socket.emit('bs_send_one', {number:num, message:msg, accountId:acc.id}, function(result){
+      var sendResult = await new Promise(function(resolve){
+        var msgTimeout=setTimeout(function(){ resolve({ok:false,error:'Timeout'}); }, 45000);
+        socket.emit('bs_send_one', {
+          number: num,
+          message: useCaption ? msg : (mediaPayload ? '' : msg),
+          accountId: acc.id,
+          media: mediaPayload || null
+        }, function(result){
           clearTimeout(msgTimeout);
-          resolve(result); // always resolve — we inspect result.ok
+          resolve(result);
         });
       });
+
+      // If file + no caption mode, send text message separately after file
+      if(sendResult && sendResult.ok && mediaPayload && !useCaption && msg.trim()){
+        await bsSleep(600 + Math.random()*400);
+        await new Promise(function(resolve){
+          socket.emit('bs_send_one', {number:num, message:msg, accountId:acc.id, media:null}, function(r){ resolve(r); });
+        });
+      }
 
       if(sendResult && sendResult.ok){
         logEntry.status='sent';
@@ -3159,10 +3652,13 @@ function bsFillRow(row, entry, idx){
   }
 
   row.style.gridTemplateColumns='34px 22px 1fr 92px 104px 80px 112px 96px';
+  var fileTag = entry.hasFile
+    ? '<span title="'+esc(entry.fileName||'file')+'" style="font-size:9px;margin-left:3px">📎</span>'
+    : '';
   row.innerHTML=
     '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
     +flagHtml
-    +'<span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(entry.number)+'</span>'
+    +'<span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(entry.number)+fileTag+'</span>'
     +typeHtml
     +carrierHtml
     +waStatusHtml

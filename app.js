@@ -715,8 +715,8 @@ io.on('connection', (socket) => {
 
   socket.on('stop', () => { isChecking = false; io.emit('toast', { msg: 'Stopped', type: 'ok' }); });
 
-  // Bulk sender — single message with account selection
-  socket.on('bs_send_one', async ({ number, message, accountId }, callback) => {
+  // Bulk sender — single message with account selection + optional media attachment
+  socket.on('bs_send_one', async ({ number, message, accountId, media }, callback) => {
     // Find account
     let acc = null;
     if (accountId) {
@@ -739,7 +739,7 @@ io.on('connection', (socket) => {
       const wid = cleaned + '@c.us';
       console.log(`[bs_send_one] Sending to ${wid} via ${acc.label}`);
 
-      // ── 1. Check if number is on WhatsApp ──────────────────────────────────
+      // ── 1. Check if number is on WhatsApp ─────────────────────────────────
       let isRegistered = false;
       try { isRegistered = await acc.client.isRegisteredUser(wid); } catch {}
       if (!isRegistered) {
@@ -747,10 +747,9 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ── 2. Check if contact has blocked us ────────────────────────────────
-      // Note: WA doesn't expose a direct "blocked me" flag. We check our side.
+      // ── 2. Get contact info (type + blocked status) ────────────────────────
       let accountType = null;
-      let isBlocked = false;
+      let isBlocked   = false;
       try {
         const contact = await acc.client.getContactById(wid);
         isBlocked = contact?.isBlocked ?? false;
@@ -759,27 +758,23 @@ io.on('connection', (socket) => {
         else if (contact) accountType = 'personal';
       } catch {}
 
-      // ── 3. Send message ───────────────────────────────────────────────────
-      const sentMsg = await acc.client.sendMessage(wid, message);
-      const msgId = sentMsg?.id?.id || sentMsg?.id?._serialized || null;
-
-      if (callback) callback({
-        ok: true,
-        account: acc.label,
-        accountType,
-        isBlocked,
-        msgId,
-        ack: 1,  // initial: sent (1 tick)
-      });
-
-      // Emit initial ACK immediately
-      if (msgId) {
-        socket.emit('bs_ack', { msgId, ack: 1, number });
+      // ── 3. Send message (with optional media attachment) ───────────────────
+      let sentMsg;
+      if (media && media.data && media.mimetype) {
+        // File attachment
+        const msgMedia = new MessageMedia(media.mimetype, media.data, media.filename || 'file');
+        const opts = { caption: message || '' };
+        sentMsg = await acc.client.sendMessage(wid, msgMedia, opts);
+      } else {
+        sentMsg = await acc.client.sendMessage(wid, message);
       }
+
+      const msgId = sentMsg?.id?.id || sentMsg?.id?._serialized || null;
+      if (callback) callback({ ok: true, account: acc.label, accountType, isBlocked, msgId, ack: 1 });
+      if (msgId) socket.emit('bs_ack', { msgId, ack: 1, number });
 
     } catch (err) {
       console.error(`[bs_send_one] Failed ${number}:`, err.message);
-      // Detect "No LID" = number not found / not registered
       const notFound = err.message && (
         err.message.includes('No LID') ||
         err.message.includes('not a contact') ||
