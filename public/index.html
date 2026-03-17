@@ -1182,8 +1182,14 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
                   <span class="dyn-tag" onclick="dynInsert('{zero_width}')">zero_width</span>
                 </div>
                 <div class="dyn-hint">
-                  <strong style="color:var(--cy)">url_track</strong> — appends ?ref=XXXX to your first URL so each message has a unique link<br>
-                  <strong style="color:var(--cy)">zero_width</strong> — inserts invisible Unicode chars to make each message fingerprint unique
+                  <strong style="color:var(--cy)">{rand_id}</strong> → A3F9KZ21 &nbsp;
+                  <strong style="color:var(--cy)">{rand_word}</strong> → ROFJFJED &nbsp;
+                  <strong style="color:var(--cy)">{rand_num}</strong> → 98400959<br>
+                  <strong style="color:var(--cy)">{rand_emoji}</strong> → 😊 &nbsp;
+                  <strong style="color:var(--cy)">{timestamp}</strong> → 1718200012345 &nbsp;
+                  <strong style="color:var(--cy)">{date}</strong> → today's date<br>
+                  <strong style="color:var(--cy)">{url_track}</strong> → your URL + ?ref=XXXXXX (unique per send)<br>
+                  <strong style="color:var(--cy)">{zero_width}</strong> → invisible char (unique fingerprint)
                 </div>
                 <div style="display:flex;gap:6px;align-items:center;margin-top:2px">
                   <span style="font-size:9px;color:var(--t3)">Custom URL base:</span>
@@ -2908,8 +2914,9 @@ function bsCountNumbers(){
 
 // ── Spintax engine ────────────────────────────────────────────────────────
 function bsSpintax(template){
-  // Recursively resolve {opt1|opt2|opt3} — picks one random option each time
-  return template.replace(/\{([^{}]+)\}/g, function(_,opts){
+  // Only resolve {opt1|opt2|...} — MUST contain | to be treated as spintax
+  // This preserves {rand_id}, {rand_word}, {name}, {number} etc.
+  return template.replace(/\{([^{}]*\|[^{}]*)\}/g, function(_,opts){
     var choices=opts.split('|');
     return bsSpintax(choices[Math.floor(Math.random()*choices.length)]);
   });
@@ -2920,7 +2927,10 @@ function bsPreviewMessage(){
   var preview=document.getElementById('bs-msg-preview');
   if(!msg.trim()){ preview.textContent='Type a message above to preview…'; return; }
   var useSpintax=document.getElementById('bs-opt-spintax').classList.contains('on');
-  preview.textContent=useSpintax?bsSpintax(msg):msg;
+  var resolved=useSpintax?bsSpintax(msg):msg;
+  // Also preview dynamic tags resolved
+  resolved=dynApply(resolved,'preview');
+  preview.textContent=resolved;
 }
 
 // ── Import from WAProof ────────────────────────────────────────────────
@@ -2992,6 +3002,7 @@ function aiToggle(){
   var on = document.getElementById('ai-enabled').checked;
   var body = document.getElementById('ai-body');
   body.style.display = on ? 'flex' : 'none';
+  body.style.flexDirection = on ? 'column' : '';
 }
 
 async function aiGenerate(){
@@ -3143,44 +3154,66 @@ function dynInsert(tag){
 }
 
 function dynApply(msg, num){
+  if(!msg) return msg;
   var urlBase = (document.getElementById('dyn-url-base')?.value||'').trim();
-  // {rand_id} — 8-char alphanumeric unique ID
+
+  // ── {rand_id} → e.g.  A3F9KZ21  (8-char alphanumeric) ───────────────────
   msg = msg.replace(/\{rand_id\}/g, function(){
-    return Math.random().toString(36).slice(2,10).toUpperCase();
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var result = '';
+    for(var k=0;k<8;k++) result += chars[Math.floor(Math.random()*chars.length)];
+    return result;
   });
-  // {rand_word} — random word from list
+
+  // ── {rand_word} → e.g.  ROFJFJED  (8-char random uppercase string) ───────
   msg = msg.replace(/\{rand_word\}/g, function(){
-    return _RAND_WORDS[Math.floor(Math.random()*_RAND_WORDS.length)];
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    var result = '';
+    for(var k=0;k<8;k++) result += chars[Math.floor(Math.random()*chars.length)];
+    return result;
   });
-  // {rand_num} — random 4-digit number
+
+  // ── {rand_num} → e.g.  98400959  (8-digit random number) ─────────────────
   msg = msg.replace(/\{rand_num\}/g, function(){
-    return String(Math.floor(1000+Math.random()*9000));
+    return String(Math.floor(10000000 + Math.random()*89999999));
   });
-  // {rand_emoji} — random emoji
+
+  // ── {rand_emoji} → random emoji from a curated safe set ──────────────────
   msg = msg.replace(/\{rand_emoji\}/g, function(){
     return _RAND_EMOJI[Math.floor(Math.random()*_RAND_EMOJI.length)];
   });
-  // {timestamp} — unix ms
-  msg = msg.replace(/\{timestamp\}/g, Date.now().toString());
-  // {date} — readable date
-  msg = msg.replace(/\{date\}/g, new Date().toLocaleDateString());
-  // {url_track} — appends ?ref=XXXX to custom URL or first URL in message
+
+  // ── {timestamp} → unix milliseconds (e.g. 1718200012345) ─────────────────
+  var _ts = Date.now().toString();
+  msg = msg.replace(/\{timestamp\}/g, _ts);
+
+  // ── {date} → readable local date (e.g. 6/12/2025) ─────────────────────────
+  var _date = new Date().toLocaleDateString();
+  msg = msg.replace(/\{date\}/g, _date);
+
+  // ── {url_track} → URL with unique ?ref= param ─────────────────────────────
   msg = msg.replace(/\{url_track\}/g, function(){
     var ref = Math.random().toString(36).slice(2,8).toUpperCase();
-    if(urlBase) return urlBase+'?ref='+ref;
-    return '?ref='+ref;
+    if(urlBase){
+      return urlBase + (urlBase.includes('?') ? '&' : '?') + 'ref=' + ref;
+    }
+    return 'ref=' + ref;
   });
-  // Append ?ref= to first URL in message if urlBase set and not already there
-  if(urlBase && !msg.includes(urlBase)){
-    var ref = Math.random().toString(36).slice(2,8).toUpperCase();
+
+  // Auto-append ?ref= to first URL in message when urlBase is set
+  if(urlBase){
+    var ref2 = Math.random().toString(36).slice(2,8).toUpperCase();
     msg = msg.replace(/(https?:\/\/[^\s]+)/, function(url){
-      return url+(url.includes('?')?'&':'?')+'ref='+ref;
+      if(url.includes('ref=')) return url; // already has one
+      return url + (url.includes('?') ? '&' : '?') + 'ref=' + ref2;
     });
   }
-  // {zero_width} — insert invisible chars
+
+  // ── {zero_width} → single invisible Unicode char ──────────────────────────
   msg = msg.replace(/\{zero_width\}/g, function(){
     return _ZW_CHARS[Math.floor(Math.random()*_ZW_CHARS.length)];
   });
+
   return msg;
 }
 

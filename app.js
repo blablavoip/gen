@@ -454,42 +454,76 @@ function safeCall(fn, fallback = null) {
 }
 
 // ── Number checker ────────────────────────────────────────────────────────
+// Helper: detect WA rate-limit errors
+function isRateLimitErr(msg) {
+  return msg && (
+    msg.includes('429') ||
+    msg.includes('rate') ||
+    msg.includes('limit') ||
+    msg.includes('flood') ||
+    msg.includes('too many') ||
+    msg.includes('blocked') ||
+    msg.includes('ban')
+  );
+}
+
+// Wait helper
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 async function checkNumber(raw, acc) {
   const cleaned = raw.replace(/\D/g, '').replace(/^0+/, '');
   if (cleaned.length < 7 || cleaned.length > 15)
     return { number: raw, cleaned, registered: false, error: 'Invalid length', account: acc.label };
-  try {
-    const wid = cleaned + '@c.us';
-    const registered = await acc.client.isRegisteredUser(wid);
-    if (!registered)
-      return { number: raw, cleaned, e164: '+' + cleaned, registered: false, account: acc.label };
 
-    const [picRes, contactRes] = await Promise.allSettled([
-      acc.client.getProfilePicUrl(wid).catch(() => null),
-      acc.client.getContactById(wid).catch(() => null),
-    ]);
-    const pic         = picRes.value  || null;
-    const contact     = contactRes.value || null;
-    const countryInfo = getCountryInfo('+' + cleaned);
-    let   accountType = 'personal';
-    if (contact?.isEnterprise) accountType = 'enterprise';
-    else if (contact?.isBusiness) accountType = 'business';
+  // Retry up to 3 times with backoff on rate-limit errors
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      const backoff = attempt * 4000 + Math.random() * 2000;
+      console.log(`[checkNumber] Retry ${attempt} for ${raw} in ${Math.round(backoff)}ms`);
+      await sleep(backoff);
+    }
+    try {
+      const wid = cleaned + '@c.us';
+      const registered = await acc.client.isRegisteredUser(wid);
+      if (!registered)
+        return { number: raw, cleaned, e164: '+' + cleaned, registered: false, account: acc.label };
 
-    return {
-      number: raw, cleaned, e164: '+' + cleaned, registered: true,
-      waLink: `https://wa.me/${cleaned}`,
-      profilePic: pic,
-      isBusiness: contact?.isBusiness ?? false,
-      isEnterprise: contact?.isEnterprise ?? false,
-      accountType,
-      name:   contact?.pushname || contact?.name || null,
-      status: contact?.statusMessage || contact?.about || null,
-      country: countryInfo.iso, countryCode: countryInfo.code,
-      checkedAt: new Date().toISOString(), account: acc.label,
-    };
-  } catch (err) {
-    return { number: raw, cleaned, e164: '+' + cleaned, registered: false, error: err.message, account: acc.label };
+      const [picRes, contactRes] = await Promise.allSettled([
+        acc.client.getProfilePicUrl(wid).catch(() => null),
+        acc.client.getContactById(wid).catch(() => null),
+      ]);
+      const pic         = picRes.value  || null;
+      const contact     = contactRes.value || null;
+      const countryInfo = getCountryInfo('+' + cleaned);
+      let   accountType = 'personal';
+      if (contact?.isEnterprise) accountType = 'enterprise';
+      else if (contact?.isBusiness) accountType = 'business';
+
+      return {
+        number: raw, cleaned, e164: '+' + cleaned, registered: true,
+        waLink: `https://wa.me/${cleaned}`,
+        profilePic: pic,
+        isBusiness: contact?.isBusiness ?? false,
+        isEnterprise: contact?.isEnterprise ?? false,
+        accountType,
+        name:   contact?.pushname || contact?.name || null,
+        status: contact?.statusMessage || contact?.about || null,
+        country: countryInfo.iso, countryCode: countryInfo.code,
+        checkedAt: new Date().toISOString(), account: acc.label,
+      };
+    } catch (err) {
+      lastErr = err;
+      if (isRateLimitErr(err.message)) {
+        console.warn(`[checkNumber] Rate limit hit on ${raw}, attempt ${attempt+1}/3`);
+        continue; // retry
+      }
+      // Non-rate-limit error — don't retry
+      return { number: raw, cleaned, e164: '+' + cleaned, registered: false, error: err.message, account: acc.label };
+    }
   }
+  // All retries exhausted
+  return { number: raw, cleaned, e164: '+' + cleaned, registered: false, error: 'Rate limited: ' + (lastErr?.message || 'unknown'), account: acc.label };
 }
 
 // ── Queue checker ─────────────────────────────────────────────────────────
@@ -499,7 +533,9 @@ async function processQueue(numbers) {
   if (!ready.length) { io.emit('error_msg', { message: 'No connected accounts.' }); return; }
   isChecking = true; results = []; stats = { valid: 0, invalid: 0, total: numbers.length };
   let rrIndex = 0;
-  const delay = Math.max(400, Math.floor(1200 / ready.length));
+  let baseDelay = Math.max(500, Math.floor(1500 / ready.length));
+  let consecutiveErrors = 0;
+
   for (let i = 0; i < numbers.length; i++) {
     if (!isChecking) break;
     const num = numbers[i].trim(); if (!num) continue;
@@ -517,7 +553,17 @@ async function processQueue(numbers) {
     results.push(result);
     if (result.registered) stats.valid++; else stats.invalid++;
     io.emit('result', { result, index: i, stats });
-    if (i < numbers.length - 1 && isChecking) await new Promise(r => setTimeout(r, delay));
+
+    // Adaptive delay — slow down on rate limit errors
+    if (result.error && isRateLimitErr(result.error)) {
+      consecutiveErrors++;
+      const penaltyDelay = Math.min(consecutiveErrors * 3000, 15000);
+      console.warn(`[processQueue] Rate-limit detected, adding ${penaltyDelay}ms penalty delay`);
+      if (i < numbers.length - 1 && isChecking) await sleep(penaltyDelay);
+    } else {
+      consecutiveErrors = Math.max(0, consecutiveErrors - 1); // cool down
+      if (i < numbers.length - 1 && isChecking) await sleep(baseDelay);
+    }
   }
   isChecking = false; io.emit('done', { results, stats });
 }
