@@ -120,6 +120,7 @@ function broadcast() {
     id: a.id, label: a.label, state: a.state,
     loadingPct: a.loadingPct ?? null, qr: a.qr ?? null,
     profileName: a.profileName ?? null, profilePic: a.profilePic ?? null,
+    phoneNumber: a.phoneNumber ?? null,
   }));
   io.emit('accounts', list);
   io.emit('ready_count', { count: list.filter(a => a.state === 'ready').length });
@@ -181,7 +182,7 @@ async function doCreateAccount(id) {
   const acc = {
     id, label: `Account ${id}`,
     client: null, state: 'init', qr: null, loadingPct: null,
-    profileName: null, profilePic: null, dead: false,
+    profileName: null, profilePic: null, phoneNumber: null, dead: false,
   };
   accounts.set(id, acc);
   broadcast();
@@ -259,6 +260,12 @@ async function doCreateAccount(id) {
 
     // Grab profile info — all wrapped so any failure doesn't block 'ready'
     try { acc.profileName = client.info?.pushname || client.info?.me?.user || null; } catch {}
+
+    // Store phone number (E.164 without +)
+    try {
+      const rawUser = client.info?.me?.user || client.info?.wid?.user || null;
+      acc.phoneNumber = rawUser ? '+' + rawUser.replace(/\D/g, '') : null;
+    } catch { acc.phoneNumber = null; }
 
     // Fetch profile picture with retries
     try {
@@ -429,13 +436,24 @@ async function sendMessage(numbers, message) {
   if (!client) return { error: 'No connected account', sent: 0, failed: numbers.length };
   const sent = [], failed = [];
   for (const num of numbers) {
-    const cleaned = num.replace(/\D/g, '').replace(/^0+/, '');
-    if (!cleaned) continue;
+    // Strip everything except digits — keep country code, no leading zeros
+    let cleaned = num.replace(/\D/g, '');
+    // Remove leading zeros only when no country code prefix expected
+    // e.g. +33... → 33..., but don't strip digits that are part of the number
+    cleaned = cleaned.replace(/^0+/, '') || cleaned;
+    if (!cleaned || cleaned.length < 7) {
+      failed.push({ number: num, error: 'Too short' }); continue;
+    }
     try {
-      await client.sendMessage(cleaned + '@c.us', message);
+      const wid = cleaned + '@c.us';
+      console.log(`[sendMessage] Sending to ${wid}`);
+      await client.sendMessage(wid, message);
       sent.push(num);
       await new Promise(r => setTimeout(r, 1000));
-    } catch (err) { failed.push({ number: num, error: err.message }); }
+    } catch (err) {
+      console.error(`[sendMessage] Failed ${num}:`, err.message);
+      failed.push({ number: num, error: err.message });
+    }
   }
   return { sent: sent.length, failed: failed.length, errors: failed };
 }
@@ -522,37 +540,56 @@ io.on('connection', (socket) => {
       return socket.emit('toast', { msg: 'Account not ready', type: 'err' });
 
     const client = acc.client;
-    let ok = false;
+    let nameOk = false, picOk = false;
 
-    // ── Update name ──
+    // ── Update display name ──
     if (name && name.trim()) {
-      // Method 1: setDisplayName (changes WA profile name)
-      try { await client.setDisplayName(name.trim()); ok = true; } catch {}
-      // Method 2: evaluate directly in WA web page (most reliable)
-      try {
-        await client.pupPage.evaluate(async (n) => {
-          const Store = window.require('WAWebCollections');
-          await Store?.ProfileSettings?.updateDisplayName?.(n);
-        }, name.trim());
-        ok = true;
-      } catch {}
-      acc.profileName = name.trim();
+      const trimmed = name.trim();
+      // Try all known methods in order
+      try { await client.setDisplayName(trimmed); nameOk = true; } catch {}
+      if (!nameOk) {
+        try {
+          await client.pupPage.evaluate(async (n) => {
+            const Store = window.require('WAWebCollections') || window.Store;
+            if (Store?.ProfileSettings?.updateDisplayName) {
+              await Store.ProfileSettings.updateDisplayName(n);
+            }
+          }, trimmed);
+          nameOk = true;
+        } catch {}
+      }
+      if (!nameOk) {
+        try {
+          await client.pupPage.evaluate(async (n) => {
+            await window.WWebJS?.setMyName?.(n);
+          }, trimmed);
+          nameOk = true;
+        } catch {}
+      }
+      acc.profileName = trimmed; // always store locally
     }
 
     // ── Update picture ──
     if (picBase64) {
       const b64 = picBase64.replace(/^data:image\/\w+;base64,/, '');
       const media = new MessageMedia('image/jpeg', b64);
-      try { await client.setProfilePicture(media); ok = true; } catch (e) {
-        console.warn(`[Account ${numId}] setProfilePicture:`, e.message);
+      try {
+        await client.setProfilePicture(media);
+        picOk = true;
+      } catch (e) {
+        console.warn(`[Account ${numId}] setProfilePicture failed:`, e.message);
       }
-      // Wait 2s for WA servers to process, then re-fetch URL
-      await new Promise(r => setTimeout(r, 2000));
+      // Wait for WA servers to process
+      await new Promise(r => setTimeout(r, 3000));
+      // Re-fetch the live URL
       try {
         const wid = client.info?.me?.user ? client.info.me.user + '@c.us' : null;
         if (wid) {
-          const freshPic = await client.getProfilePicUrl(wid).catch(() => null);
-          // freshPic might be the same URL but we use it; fallback to base64
+          let freshPic = null;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try { freshPic = await client.getProfilePicUrl(wid); if (freshPic) break; } catch {}
+            await new Promise(r => setTimeout(r, 1000));
+          }
           acc.profilePic = freshPic || picBase64;
         } else {
           acc.profilePic = picBase64;
@@ -561,7 +598,8 @@ io.on('connection', (socket) => {
     }
 
     broadcast();
-    socket.emit('toast', { msg: ok ? 'Profile updated!' : 'Saved locally (WA sync may take a moment)', type: 'ok' });
+    const msg = (nameOk || picOk) ? 'Profile updated on WhatsApp ✓' : 'Saved locally (may take a moment to sync on WA)';
+    socket.emit('toast', { msg, type: 'ok' });
     socket.emit('profile_updated', { id: numId, profileName: acc.profileName, profilePic: acc.profilePic });
   });
 
@@ -603,11 +641,17 @@ io.on('connection', (socket) => {
       return;
     }
     try {
-      const cleaned = number.replace(/\D/g, '').replace(/^0+/, '');
-      if (!cleaned) { if (callback) callback({ ok: false, error: 'Invalid number' }); return; }
-      await acc.client.sendMessage(cleaned + '@c.us', message);
+      let cleaned = number.replace(/\D/g, '');
+      cleaned = cleaned.replace(/^0+/, '') || cleaned;
+      if (!cleaned || cleaned.length < 7) {
+        if (callback) callback({ ok: false, error: 'Invalid number' }); return;
+      }
+      const wid = cleaned + '@c.us';
+      console.log(`[bs_send_one] Sending to ${wid} via ${acc.label}`);
+      await acc.client.sendMessage(wid, message);
       if (callback) callback({ ok: true, account: acc.label });
     } catch (err) {
+      console.error(`[bs_send_one] Failed ${number}:`, err.message);
       if (callback) callback({ ok: false, error: err.message });
     }
   });
@@ -616,7 +660,7 @@ io.on('connection', (socket) => {
 // ── Start ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\nWAProof v17 → http://localhost:${PORT}`);
+  console.log(`\nWAProof v18 → http://localhost:${PORT}`);
   if (!findChrome()) console.error('[Chrome] NOT FOUND — install chromium or google-chrome');
   // Start account 1 after a short delay to let the HTTP server settle
   setTimeout(() => enqueueCreate(1), 500);

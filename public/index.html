@@ -133,6 +133,12 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .ac-qr-wrap{padding:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;background:var(--s1)}
 .ac-qr-wrap img{width:148px;height:148px;background:#fff;padding:6px;border-radius:10px;box-shadow:var(--shadow)}
 .ac-qr-hint{font-size:10px;color:var(--t3);margin-top:8px;text-align:center;line-height:1.6}
+.ac-phone-row{display:flex;align-items:center;gap:6px;padding:0 12px 8px;font-size:10px}
+.ac-phone-num{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:.04em;cursor:pointer;transition:color .15s}
+.ac-phone-num:hover{color:var(--g)}
+.ac-phone-mask{letter-spacing:.12em}
+.ac-phone-eye{background:none;border:none;cursor:pointer;color:var(--t4);padding:0 2px;font-size:11px;line-height:1;transition:color .15s}
+.ac-phone-eye:hover{color:var(--t2)}
 .ac-disc-banner{margin:0 12px 10px;padding:8px 10px;background:var(--r-bg);border:1px solid rgba(186,26,26,.18);border-radius:8px;font-size:9px;color:var(--r);text-align:center;line-height:1.7}
 .ac-disc-banner button{margin-top:5px;width:100%;background:linear-gradient(135deg,var(--g),var(--g2));border:none;border-radius:6px;color:#fff;font-family:var(--font);font-weight:700;font-size:9px;padding:5px;cursor:pointer}
 
@@ -807,8 +813,15 @@ body.dark .ac-qr-wrap{background:var(--s2)}
             <div class="pg-results-header">
               <span class="pg-results-count" id="pg-count">0 numbers</span>
               <span class="pg-results-meta" id="pg-meta"></span>
-              <div class="pg-results-actions">
+              <div class="pg-results-actions" style="flex-wrap:wrap;gap:4px">
+                <select class="cd-filter-sel" id="pg-filter-carrier" onchange="pgApplyFilters()" title="Filter by carrier" style="display:none">
+                  <option value="">All Carriers</option>
+                </select>
+                <select class="cd-filter-sel" id="pg-filter-type" onchange="pgApplyFilters()" title="Filter by type" style="display:none">
+                  <option value="">All Types</option>
+                </select>
                 <button class="pg-act-btn b" onclick="pgCopyAll()"><span class="material-symbols-outlined" style="font-size:11px">content_copy</span> Copy All</button>
+                <button class="pg-act-btn b" onclick="pgCopyFiltered()" title="Copy only visible rows"><span class="material-symbols-outlined" style="font-size:11px">filter_list</span> Copy Filtered</button>
                 <button class="pg-act-btn g" onclick="pgDownloadTxt()"><span class="material-symbols-outlined" style="font-size:11px">download</span> TXT</button>
                 <button class="pg-act-btn g" onclick="pgDownloadCsv()"><span class="material-symbols-outlined" style="font-size:11px">download</span> CSV</button>
                 <button class="pg-act-btn" onclick="pgSendToChecker()" title="Send to WAProof"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WAProof</button>
@@ -876,6 +889,8 @@ body.dark .ac-qr-wrap{background:var(--s2)}
               <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--g)" id="cd-k-mobile">0</div><div class="cd-kpi-l">Mobile</div></div>
               <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--b2)" id="cd-k-landline">0</div><div class="cd-kpi-l">Landline</div></div>
               <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--cy)" id="cd-k-voip">0</div><div class="cd-kpi-l">VoIP</div></div>
+              <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--g)" id="cd-k-valid">0</div><div class="cd-kpi-l">Valid ✓</div></div>
+              <div class="cd-kpi"><div class="cd-kpi-n" style="color:var(--r)" id="cd-k-invalid">0</div><div class="cd-kpi-l">Invalid ✗</div></div>
             </div>
             <div class="cd-prog-row" id="cd-prog-row">
               <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);font-family:var(--mono)"><span id="cd-prog-txt">Detecting…</span><span id="cd-prog-pct">0%</span></div>
@@ -1129,6 +1144,44 @@ var msgTargets = [];
 var profAcctId = null;
 var profPicB64 = null;
 
+// Global blank avatar SVGs — defined once, safe to use in onerror handlers
+var _BLANK_PIC_SMALL = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#ffffff25"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="#ffffff25"/></svg>');
+var _BLANK_PIC_LARGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="28" r="18" fill="#ffffff20"/><path d="M8 75c0-18 14.3-30 32-30s32 12 32 30" fill="#ffffff20"/></svg>');
+function acPicErr(img){ img.onerror=null; img.src=_BLANK_PIC_SMALL; }
+
+// Phone number mask / reveal / copy helpers
+function maskPhone(num){
+  // +1234••••••89  — show country code + first 2 + last 2, mask middle
+  if(!num) return '—';
+  var s=num.replace(/\s/g,'');
+  if(s.length<=6) return s;
+  var prefix=s.slice(0,Math.min(4,s.length-4)); // e.g. "+123"
+  var suffix=s.slice(-2);
+  var dots='•'.repeat(Math.max(2, s.length-prefix.length-2));
+  return prefix+dots+suffix;
+}
+var _phoneRevealed={};
+function acPhoneToggle(id, num){
+  var span=document.getElementById('ac-ph-'+id);
+  var eye=document.getElementById('ac-ph-eye-'+id);
+  if(!span) return;
+  _phoneRevealed[id]=!_phoneRevealed[id];
+  if(_phoneRevealed[id]){
+    span.textContent=num;
+    span.classList.remove('ac-phone-mask');
+    if(eye) eye.textContent='🙈';
+  } else {
+    span.textContent=maskPhone(num);
+    span.classList.add('ac-phone-mask');
+    if(eye) eye.textContent='👁';
+  }
+}
+function acPhoneCopy(num){
+  navigator.clipboard.writeText(num)
+    .then(function(){ toast('Copied: '+num,'ok'); })
+    .catch(function(){ toast('Copy failed','err'); });
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // TAB SWITCHING
 // ─────────────────────────────────────────────────────────────────────────
@@ -1234,7 +1287,6 @@ function renderAccounts(list){
     el.innerHTML='<div style="padding:18px 0;text-align:center;color:var(--t3);font-size:10px;line-height:1.7">No accounts.<br>Click <strong style="color:var(--g)">+ Add</strong> to start.</div>';
     return;
   }
-  var BLANK_PIC='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A//www.w3.org/2000/svg%22 viewBox%3D%220 0 24 24%22%3E%3Ccircle cx%3D%2212%22 cy%3D%228%22 r%3D%224%22 fill%3D%22%23ffffff25%22/%3E%3Cpath d%3D%22M4 20c0-4 3.6-7 8-7s8 3 8 7%22 fill%3D%22%23ffffff25%22/%3E%3C/svg%3E';
   el.innerHTML=list.map(function(a){
     var pct=a.loadingPct||0;
     var showProg=(a.state==='authenticated'||a.state==='loading')&&a.loadingPct!=null;
@@ -1247,15 +1299,26 @@ function renderAccounts(list){
     // Use /proxy-pic endpoint so WA CDN images load without CORS issues
     var picSrc=a.profilePic
       ? (a.profilePic.startsWith('data:') ? a.profilePic : '/proxy-pic?url='+encodeURIComponent(a.profilePic))
-      : BLANK_PIC;
+      : '';
     var profileHtml=isReady
       ?'<div class="ac-profile">'
-        +'<img class="ac-profile-pic" src="'+esc(picSrc)+'" alt="" loading="lazy" '
+        +'<img class="ac-profile-pic" src="'+esc(picSrc||_BLANK_PIC_SMALL)+'" alt="" loading="lazy" '
         +'onclick="openProfModal('+a.id+')" '
-        +'onerror="this.onerror=null;this.src=\''+BLANK_PIC+'\'">'
+        +'onerror="acPicErr(this)">'
         +'<span class="ac-profile-name">'+(a.profileName?esc(a.profileName):'<span style="color:var(--t3);font-style:italic">No name</span>')+'</span>'
         +'<button class="ac-profile-edit" onclick="openProfModal('+a.id+')">✏ Edit</button>'
-        +'</div>':'';
+        +'</div>'
+        +(a.phoneNumber
+          ? '<div class="ac-phone-row">'
+            +'<span style="font-size:9px;color:var(--t4)">📞</span>'
+            +'<span class="ac-phone-num ac-phone-mask" id="ac-ph-'+a.id+'" '
+              +'onclick="acPhoneCopy(\''+esc(a.phoneNumber)+'\')" '
+              +'title="Click to copy">'+maskPhone(a.phoneNumber)+'</span>'
+            +'<button class="ac-phone-eye" onclick="acPhoneToggle('+a.id+',\''+esc(a.phoneNumber)+'\')" '
+              +'id="ac-ph-eye-'+a.id+'" title="Show/hide number">👁</button>'
+            +'</div>'
+          : '')
+      : '';
     return '<div class="ac s-'+a.state+'">'
       +'<div class="ac-head"><div class="ac-dot '+dotClass(a.state)+'"></div>'
       +'<div class="ac-info"><div class="ac-name">'+esc(a.label)+'</div><div class="ac-status">'+stateText(a)+'</div></div>'
@@ -1290,14 +1353,13 @@ function openProfModal(id){
   if(!acc) return;
   document.getElementById('prof-modal-sub').textContent=acc.label;
   document.getElementById('prof-name-input').value=acc.profileName||'';
-  var BLANK='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A//www.w3.org/2000/svg%22 viewBox%3D%220 0 80 80%22%3E%3Ccircle cx%3D%2240%22 cy%3D%2228%22 r%3D%2218%22 fill%3D%22%23ffffff20%22/%3E%3Cpath d%3D%22M8 75c0-18 14.3-30 32-30s32 12 32 30%22 fill%3D%22%23ffffff20%22/%3E%3C/svg%3E';
   var pic=acc.profilePic||'';
   var picSrc=pic
     ? (pic.startsWith('data:') ? pic : '/proxy-pic?url='+encodeURIComponent(pic))
-    : BLANK;
+    : _BLANK_PIC_LARGE;
   var previewEl=document.getElementById('prof-pic-preview');
   previewEl.src=picSrc;
-  previewEl.onerror=function(){ this.onerror=null; this.src=BLANK; };
+  previewEl.onerror=function(){ this.onerror=null; this.src=_BLANK_PIC_LARGE; };
   document.getElementById('prof-overlay').classList.add('open');
 }
 function closeProfModal(){ document.getElementById('prof-overlay').classList.remove('open'); profAcctId=null; profPicB64=null; }
@@ -1316,14 +1378,14 @@ function saveProfModal(){
   var btn=document.getElementById('btn-prof-save');
   btn.disabled=true;
   btn.innerHTML='<div class="spin spin-w"></div> Saving…';
-  socket.emit('update_profile',{id:profAcctId, name:name||null, picBase64:profPicB64||null});
-  // Modal will close when server sends profile_updated or toast — see socket handler below
-  // Fallback: close after 8s if no response
+  // Send name as empty string if cleared (not null) so server clears it
+  socket.emit('update_profile',{id:profAcctId, name:name, picBase64:profPicB64||null});
+  // Fallback close: 15s to allow for photo upload + WA server processing
   var closeTimer=setTimeout(function(){
     btn.disabled=false;
     btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Save';
     closeProfModal();
-  },8000);
+  }, 15000);
   btn._closeTimer=closeTimer;
 }
 
@@ -1331,7 +1393,8 @@ socket.on('profile_updated', function(d){
   // Update the account in local state immediately for instant UI refresh
   var acc=acctState.find(function(a){return a.id===d.id;});
   if(acc){
-    if(d.profileName) acc.profileName=d.profileName;
+    // Always update name (even if blank — user may have cleared it)
+    if(typeof d.profileName !== 'undefined') acc.profileName=d.profileName;
     if(d.profilePic) acc.profilePic=d.profilePic;
     renderAccounts(acctState);
   }
@@ -1415,7 +1478,21 @@ function renderRow(r, idx){
     +acts;
   list.appendChild(row);
   row.scrollIntoView({behavior:'smooth',block:'nearest'});
-  setTimeout(function(){ detectCarrierForRow(r.e164||r.number, idx); }, 80);
+  // Only call real API for valid WA numbers — fallback to local DB for invalid
+  if(r.registered){
+    setTimeout(function(){ detectCarrierForRow(r.e164||r.number, idx); }, 80);
+  } else {
+    // Use local DB immediately — no API call needed
+    setTimeout(function(){
+      var el=document.getElementById('carrier-'+idx);
+      if(!el) return;
+      var res=getCarrierLocal(r.e164||r.number);
+      if(res){
+        var icon=res.type==='mobile'?'📱':res.type==='landline'?'☎️':res.type==='voip'?'🌐':res.type==='toll_free'?'📞':'💎';
+        el.className='carrier-chip'; el.title=res.carrier+' · '+res.type; el.textContent=icon+' '+res.carrier;
+      } else { el.className='carrier-chip unknown'; el.textContent='— Unknown'; }
+    }, 40);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1829,14 +1906,14 @@ async function cdStart(){
   if(!nums.length){toast('Enter at least one number','err');return;}
   var method=document.getElementById('cd-method').value;
   var apiKey=document.getElementById('cd-api-key').value.trim();
-  if(method!=='local'&&!apiKey){toast('Enter your API key first','err');return;}
-  var delay=parseInt(document.getElementById('cd-delay').value)||500;
+  if((method==='numverify'||method==='abstract')&&!apiKey){toast('Enter your API key first','err');return;}
+  var delay=parseInt(document.getElementById('cd-delay').value)||200;
   cdResults=[];cdAbort=false;
   document.getElementById('cd-results').innerHTML='';
   document.getElementById('cd-detect-btn').disabled=true;
   document.getElementById('cd-stop-btn').classList.add('show');
   document.getElementById('cd-prog-row').classList.add('show');
-  var stats={total:0,found:0,mobile:0,landline:0,voip:0};
+  var stats={total:0,found:0,mobile:0,landline:0,voip:0,valid:0,invalid:0};
   for(var i=0;i<nums.length;i++){
     if(cdAbort) break;
     document.getElementById('cd-prog-txt').textContent='Detecting '+(i+1)+' / '+nums.length;
@@ -1846,18 +1923,23 @@ async function cdStart(){
     var result=await cdDetectOne(nums[i],method,apiKey);
     cdResults.push(result);
     stats.total++;
-    if(result.carrier!=='Unknown') stats.found++;
+    if(result.carrier&&result.carrier!=='Unknown') stats.found++;
     if(result.type==='mobile') stats.mobile++;
     else if(result.type==='landline') stats.landline++;
     else if(result.type==='voip') stats.voip++;
+    if(result.valid===true) stats.valid++;
+    else if(result.valid===false) stats.invalid++;
     cdRenderRow(result,i+1);
     document.getElementById('cd-k-total').textContent=stats.total;
     document.getElementById('cd-k-found').textContent=stats.found;
     document.getElementById('cd-k-mobile').textContent=stats.mobile;
     document.getElementById('cd-k-landline').textContent=stats.landline;
     document.getElementById('cd-k-voip').textContent=stats.voip;
+    document.getElementById('cd-k-valid').textContent=stats.valid;
+    document.getElementById('cd-k-invalid').textContent=stats.invalid;
     document.getElementById('cd-res-count').textContent=cdResults.length+' results';
-    if(method!=='local'&&i<nums.length-1) await new Promise(function(r){setTimeout(r,delay);});
+    // Only delay for external paid APIs, not for waproof or local
+    if((method==='numverify'||method==='abstract')&&i<nums.length-1) await new Promise(function(r){setTimeout(r,delay);});
   }
   document.getElementById('cd-detect-btn').disabled=false;
   document.getElementById('cd-stop-btn').classList.remove('show');
@@ -1975,7 +2057,7 @@ function cdClear(){
   cdResults=[];
   document.getElementById('cd-results').innerHTML='<div class="pg-empty" id="cd-empty"><div class="pg-empty-icon">📡</div><div style="font-size:13px;font-weight:700;color:var(--t2)">Carrier Detection</div><div style="font-size:11px;text-align:center;max-width:260px;line-height:1.7;color:var(--t3)">Paste phone numbers on the left and click <strong style="color:var(--cy)">Detect Carriers</strong></div></div>';
   document.getElementById('cd-res-count').textContent='0 results';
-  ['cd-k-total','cd-k-found','cd-k-mobile','cd-k-landline','cd-k-voip'].forEach(function(id){document.getElementById(id).textContent='0';});
+  ['cd-k-total','cd-k-found','cd-k-mobile','cd-k-landline','cd-k-voip','cd-k-valid','cd-k-invalid'].forEach(function(id){document.getElementById(id).textContent='0';});
   ['cd-filter-carrier','cd-filter-country','cd-filter-type'].forEach(function(id){
     var sel=document.getElementById(id);
     if(sel){sel.innerHTML='<option value="">'+sel.options[0].text+'</option>';sel.style.display='none';}
@@ -2291,6 +2373,8 @@ function generateNumbers(){
       var geo = d.geolocation||'';
       carrierSpan.textContent = icon+' '+carrier;
       carrierSpan.title = carrier+(geo?' · '+geo:'')+(d.time_zones&&d.time_zones.length?' · '+d.time_zones[0]:'');
+      // Update filter dropdowns with new API data
+      pgUpdateFilters();
     });
   });
 }
@@ -2389,6 +2473,61 @@ function pgClear(){
   document.getElementById('pg-numbers-list').innerHTML='<div class="pg-empty" id="pg-empty"><div class="pg-empty-icon">📱</div><div style="font-size:13px;font-weight:700;color:var(--t2)">Phone Number Generator</div><div style="font-size:11px;text-align:center;max-width:240px;line-height:1.7;color:var(--t3)">Select a country and click <strong style="color:var(--b2)">Generate Numbers</strong></div></div>';
   document.getElementById('pg-count').textContent='0 numbers';
   document.getElementById('pg-meta').textContent='';
+  ['pg-filter-carrier','pg-filter-type'].forEach(function(id){
+    var sel=document.getElementById(id);
+    if(sel){sel.innerHTML='<option value="">'+sel.options[0].text+'</option>';sel.style.display='none';}
+  });
+}
+
+// ── Generator filters (populated from API data) ───────────────────────────
+function pgUpdateFilters(){
+  var carriers=new Set(), types=new Set();
+  pgGeneratedNumbers.forEach(function(item){
+    var d=item._apiData;
+    var carrier=d&&d.carrier?d.carrier:(item.carrier?item.carrier.carrier:null);
+    if(carrier&&carrier!=='Unknown') carriers.add(carrier);
+    var type=d&&d.type?d.type:item.type;
+    if(type) types.add(type);
+  });
+  function repop(selId, values, label){
+    var sel=document.getElementById(selId); if(!sel) return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">'+label+'</option>';
+    Array.from(values).sort().forEach(function(v){
+      var o=document.createElement('option'); o.value=v; o.textContent=v;
+      if(v===cur) o.selected=true; sel.appendChild(o);
+    });
+    sel.style.display=values.size>0?'':'none';
+  }
+  repop('pg-filter-carrier', carriers, 'All Carriers');
+  repop('pg-filter-type', types, 'All Types');
+}
+
+function pgApplyFilters(){
+  var fCarrier=document.getElementById('pg-filter-carrier').value;
+  var fType=document.getElementById('pg-filter-type').value;
+  var rows=document.querySelectorAll('#pg-numbers-list .pg-num-row');
+  var vis=0;
+  pgGeneratedNumbers.forEach(function(item,i){
+    var row=rows[i]; if(!row) return;
+    var d=item._apiData;
+    var carrier=d&&d.carrier?d.carrier:(item.carrier?item.carrier.carrier:'');
+    var type=d&&d.type?d.type:item.type;
+    var show=(!fCarrier||carrier===fCarrier)&&(!fType||type===fType);
+    row.style.display=show?'':'none';
+    if(show) vis++;
+  });
+  document.getElementById('pg-count').textContent=vis+' / '+pgGeneratedNumbers.length+' numbers';
+}
+
+function pgCopyFiltered(){
+  var rows=document.querySelectorAll('#pg-numbers-list .pg-num-row');
+  var nums=[];
+  rows.forEach(function(r,i){
+    if(r.style.display!=='none'&&pgGeneratedNumbers[i]) nums.push(pgGeneratedNumbers[i].formatted);
+  });
+  if(!nums.length){toast('No visible numbers','err');return;}
+  navigator.clipboard.writeText(nums.join('\n')).then(function(){toast('Copied '+nums.length+' filtered numbers','ok');}).catch(function(){toast('Copy failed','err');});
 }
 
 // ─────────────────────────────────────────────────────────────────────────
