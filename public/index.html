@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WAProof v17</title>
+<title>WAProof v18</title>
 <script src="/socket.io/socket.io.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/css/flag-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -528,6 +528,13 @@ body.dark .ac-qr-wrap{background:var(--s2)}
 .panel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
+/* ── DYNAMIC FILTER SELECTS ── */
+.cd-filter-sel{height:24px;padding:0 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--surface);color:var(--t2);font-family:var(--font);font-size:9px;font-weight:600;cursor:pointer;outline:none;transition:all .15s}
+.cd-filter-sel:focus{border-color:var(--cy);color:var(--t1)}
+
+/* Rich carrier row (WAProof API mode) */
+.cd-row.rich{grid-template-columns:34px 22px 1fr 100px 80px 70px 80px 100px !important}
+
 /* Info badge */
 .info-badge{display:flex;gap:8px;padding:9px 12px;background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.15);border-radius:8px;font-size:10px;color:var(--b2);line-height:1.6}
 .info-badge .material-symbols-outlined{font-size:16px;flex-shrink:0;margin-top:1px}
@@ -541,7 +548,7 @@ body.dark .ac-qr-wrap{background:var(--s2)}
     <div class="login-top">
       <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg></div>
       <div class="login-title">WA<span>Proof</span></div>
-      <div class="login-sub">WhatsApp Validator & Tools — v17</div>
+      <div class="login-sub">WhatsApp Validator & Tools — v18</div>
     </div>
     <div class="login-body">
       <div class="li-field"><div class="li-label">Username</div><input class="li-input" id="li-user" placeholder="Enter username" autocomplete="username"></div>
@@ -571,7 +578,7 @@ body.dark .ac-qr-wrap{background:var(--s2)}
     <div class="tb-brand">
       <div class="tb-logo"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg></div>
       <span class="tb-name">WA<span>Proof</span></span>
-      <span class="tb-version">v17</span>
+      <span class="tb-version">v18</span>
     </div>
     <div class="tb-user">
       <div class="tb-divider"></div>
@@ -688,6 +695,17 @@ body.dark .ac-qr-wrap{background:var(--s2)}
             <button class="abtn" id="ab-filter-all" onclick="setResultFilter('all')" style="border-color:var(--g);color:var(--g);background:var(--g-bg)">All</button>
             <button class="abtn" id="ab-filter-valid" onclick="setResultFilter('valid')">✓ Valid</button>
             <button class="abtn" id="ab-filter-invalid" onclick="setResultFilter('invalid')">✗ Invalid</button>
+          </div>
+          <div class="abar-sep"></div>
+          <div class="abar-group" id="checker-dyn-filters" style="display:none">
+            <span class="abar-label">Carrier</span>
+            <select class="cd-filter-sel" id="ab-filter-carrier" onchange="applyResultFilter()" title="Filter by carrier">
+              <option value="">All</option>
+            </select>
+            <span class="abar-label" style="margin-left:4px">Country</span>
+            <select class="cd-filter-sel" id="ab-filter-country" onchange="applyResultFilter()" title="Filter by country">
+              <option value="">All</option>
+            </select>
           </div>
           <div class="abar-sep"></div>
           <button class="abtn r" id="ab-clear">
@@ -822,6 +840,7 @@ body.dark .ac-qr-wrap{background:var(--s2)}
             <div class="cd-field">
               <div class="cd-label">Detection Method</div>
               <select class="cd-select" id="cd-method" onchange="cdMethodChange()">
+                <option value="waproof" selected>⚡ WAProof API (live, rich data)</option>
                 <option value="local">🔍 Local Prefix DB (offline, instant)</option>
                 <option value="numverify">🌐 Numverify API (live, accurate)</option>
                 <option value="abstract">🌐 AbstractAPI (live, accurate)</option>
@@ -834,11 +853,11 @@ body.dark .ac-qr-wrap{background:var(--s2)}
             </div>
             <div id="cd-delay-field" class="cd-field" style="display:none">
               <div class="cd-label">Delay between requests (ms)</div>
-              <input class="cd-input" id="cd-delay" type="number" value="500" min="100" max="5000">
+              <input class="cd-input" id="cd-delay" type="number" value="200" min="100" max="5000">
             </div>
             <div class="info-badge" style="font-size:9px">
               <span class="material-symbols-outlined" style="color:var(--b2)">info</span>
-              Local DB covers 50+ countries instantly. Use API for live carrier data.
+              WAProof API returns carrier, geolocation, timezone, formats &amp; more in real-time.
             </div>
             <div style="display:flex;flex-direction:column;gap:5px">
               <button class="cd-detect-btn" id="cd-detect-btn" onclick="cdStart()">
@@ -864,16 +883,30 @@ body.dark .ac-qr-wrap{background:var(--s2)}
             </div>
             <div class="cd-results-header">
               <span style="font-size:12px;font-weight:700;color:var(--t1)" id="cd-res-count">0 results</span>
-              <div style="display:flex;gap:4px;margin-left:auto">
+              <div style="display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;align-items:center">
+                <select class="cd-filter-sel" id="cd-filter-carrier" onchange="cdApplyFilters()" title="Filter by carrier" style="display:none">
+                  <option value="">All Carriers</option>
+                </select>
+                <select class="cd-filter-sel" id="cd-filter-country" onchange="cdApplyFilters()" title="Filter by country" style="display:none">
+                  <option value="">All Countries</option>
+                </select>
+                <select class="cd-filter-sel" id="cd-filter-type" onchange="cdApplyFilters()" title="Filter by type" style="display:none">
+                  <option value="">All Types</option>
+                </select>
                 <button class="pg-act-btn b" onclick="cdCopyAll()"><span class="material-symbols-outlined" style="font-size:11px">content_copy</span> Copy All</button>
                 <button class="pg-act-btn g" onclick="cdDownloadCsv()"><span class="material-symbols-outlined" style="font-size:11px">download</span> CSV</button>
                 <button class="pg-act-btn" onclick="cdSendToChecker()"><span class="material-symbols-outlined" style="font-size:11px">verified</span> → WAProof</button>
                 <button class="pg-act-btn r" onclick="cdClear()"><span class="material-symbols-outlined" style="font-size:11px">delete</span> Clear</button>
               </div>
             </div>
-            <div class="cd-row-head">
+            <div class="cd-row-head" id="cd-row-head-std">
               <div class="col-h">#</div><div class="col-h">🏳</div><div class="col-h">Number</div>
               <div class="col-h">Carrier</div><div class="col-h">Country</div><div class="col-h">Type</div>
+            </div>
+            <div class="cd-row-head" id="cd-row-head-rich" style="display:none;grid-template-columns:34px 22px 1fr 100px 80px 70px 80px 100px !important">
+              <div class="col-h">#</div><div class="col-h">🏳</div><div class="col-h">Number</div>
+              <div class="col-h">Carrier</div><div class="col-h">Country</div><div class="col-h">Type</div>
+              <div class="col-h">Valid</div><div class="col-h">Timezone</div>
             </div>
             <div class="cd-num-grid" id="cd-results">
               <div class="pg-empty" id="cd-empty">
@@ -1621,19 +1654,91 @@ function getIsoFromNumber(number){
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// CENTRAL PARSE API  — calls the real WAProof endpoint
+// ─────────────────────────────────────────────────────────────────────────
+var _parseCache = {};
+async function parsePhoneAPI(number){
+  var n = number.replace(/[\s\-\(\)\.]/g,'');
+  if(!n.startsWith('+')) n = '+' + n;
+  if(_parseCache[n]) return _parseCache[n];
+  try{
+    var resp = await fetch('https://api-production-9ae5.up.railway.app/api/parse',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({number:n})
+    });
+    var json = await resp.json();
+    if(json.success && json.data){
+      _parseCache[n] = json.data;
+      return json.data;
+    }
+  }catch(e){ /* fall through to local */ }
+  return null;
+}
+
 function detectCarrierForRow(number, idx){
   var el=document.getElementById('carrier-'+idx);
   if(!el) return;
-  var res=getCarrierLocal(number);
-  if(res){
-    var icon=res.type==='mobile'?'📱':res.type==='landline'?'☎️':res.type==='voip'?'🌐':res.type==='toll_free'?'📞':'💎';
-    el.className='carrier-chip';
-    el.title=res.carrier+' · '+res.type;
-    el.textContent=icon+' '+res.carrier;
-  } else {
-    el.className='carrier-chip unknown';
-    el.textContent='— Unknown';
+  // Show spinner immediately
+  el.className='carrier-chip loading';
+  el.textContent='⏳ …';
+  parsePhoneAPI(number).then(function(d){
+    if(!el) return;
+    if(d && (d.carrier || d.type)){
+      var typeIcons={mobile:'📱',landline:'☎️',voip:'🌐',toll_free:'📞',premium:'💎'};
+      var t = (d.type||'').toLowerCase().replace(/\s+/g,'_');
+      var icon = typeIcons[t] || '📡';
+      var carrier = d.carrier || d.type || 'Unknown';
+      el.className='carrier-chip';
+      el.title=carrier+' · '+(d.type||'')+(d.geolocation?' · '+d.geolocation:'');
+      el.textContent=icon+' '+carrier;
+      // Also patch the result object for dynamic checker filters
+      var rowIndex = idx - 1;
+      if(allResults[rowIndex]){
+        allResults[rowIndex]._apiCarrier = carrier;
+        allResults[rowIndex]._apiCountryName = d.geolocation || d.region_code || '';
+        allResults[rowIndex]._apiType = d.type || '';
+        checkerUpdateFilters();
+      }
+    } else {
+      // API had no data → fallback to local DB
+      var res=getCarrierLocal(number);
+      if(res){
+        var icon2=res.type==='mobile'?'📱':res.type==='landline'?'☎️':res.type==='voip'?'🌐':res.type==='toll_free'?'📞':'💎';
+        el.className='carrier-chip';
+        el.title=res.carrier+' · '+res.type;
+        el.textContent=icon2+' '+res.carrier;
+      } else {
+        el.className='carrier-chip unknown';
+        el.textContent='— Unknown';
+      }
+    }
+  });
+}
+
+// Update checker tab dynamic filter dropdowns from allResults
+function checkerUpdateFilters(){
+  var carriers = new Set(), countries = new Set();
+  allResults.forEach(function(r){
+    if(r._apiCarrier && r._apiCarrier !== 'Unknown') carriers.add(r._apiCarrier);
+    if(r._apiCountryName) countries.add(r._apiCountryName);
+  });
+  function repop(selId, values){
+    var sel = document.getElementById(selId); if(!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">All</option>';
+    Array.from(values).sort().forEach(function(v){
+      var o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      if(v === cur) o.selected = true;
+      sel.appendChild(o);
+    });
   }
+  repop('ab-filter-carrier', carriers);
+  repop('ab-filter-country', countries);
+  var dynFilters = document.getElementById('checker-dyn-filters');
+  if(dynFilters) dynFilters.style.display = (carriers.size > 0 || countries.size > 0) ? 'flex' : 'none';
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1648,14 +1753,49 @@ document.getElementById('cd-numbers').addEventListener('input',function(){
 });
 function cdMethodChange(){
   var m=document.getElementById('cd-method').value;
-  document.getElementById('cd-api-key-field').style.display=m==='local'?'none':'flex';
-  document.getElementById('cd-delay-field').style.display=m==='local'?'none':'flex';
+  document.getElementById('cd-api-key-field').style.display=(m==='numverify'||m==='abstract')?'flex':'none';
+  document.getElementById('cd-delay-field').style.display=(m==='numverify'||m==='abstract')?'flex':'none';
   if(m==='numverify') document.getElementById('cd-api-hint').innerHTML='Free key at <a href="https://numverify.com" target="_blank">numverify.com</a> — 100 req/month';
   else if(m==='abstract') document.getElementById('cd-api-hint').innerHTML='Free key at <a href="https://www.abstractapi.com/phone-validation-api" target="_blank">abstractapi.com</a> — 250 req/month';
+  // Show/hide rich column headers
+  var isRich=(m==='waproof');
+  document.getElementById('cd-row-head-std').style.display=isRich?'none':'';
+  document.getElementById('cd-row-head-rich').style.display=isRich?'':'none';
 }
 async function cdDetectOne(number,method,apiKey){
   var n=number.replace(/[\s\-\(\)\.]/g,'');
   if(!n.startsWith('+')) n='+'+n;
+  if(method==='waproof'){
+    try{
+      var resp=await fetch('https://api-production-9ae5.up.railway.app/api/parse',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({number:n})
+      });
+      var data=await resp.json();
+      if(!data.success) throw new Error(data.error&&data.error.message||'API error');
+      var d=data.data;
+      return {
+        number:n,
+        carrier:d.carrier||'Unknown',
+        type:d.type||'unknown',
+        country:d.region_code||'—',
+        country_name:d.geolocation||d.region_code||'Unknown',
+        valid:!!d.valid,
+        possible:!!d.possible,
+        international_format:d.international_format||n,
+        e164:d.e164||n,
+        national_format:d.national_format||n,
+        time_zones:d.time_zones||[],
+        country_code:d.country_code||'',
+        geolocation:d.geolocation||'',
+        source:'waproof'
+      };
+    }catch(e){
+      var r0=getCarrierLocal(n); var iso0=getIsoFromNumber(n);
+      return {number:n,carrier:r0?r0.carrier:'Unknown',type:r0?r0.type:'unknown',country:iso0||'—',country_name:iso0?CC_NAMES[iso0]||iso0:'Unknown',valid:!!r0,source:'local (fallback)',error:e.message};
+    }
+  }
   if(method==='local'){
     var res=getCarrierLocal(n); var iso=getIsoFromNumber(n);
     return {number:n,carrier:res?res.carrier:'Unknown',type:res?res.type:'unknown',country:iso||'—',country_name:iso?CC_NAMES[iso]||iso:'Unknown',valid:!!res,source:'local'};
@@ -1733,20 +1873,84 @@ function cdStop(){
 }
 function cdRenderRow(r,idx){
   var el=document.getElementById('cd-results');
-  var row=document.createElement('div'); row.className='cd-row';
+  var row=document.createElement('div');
+  var isRich=(r.source==='waproof');
+  row.className=isRich?'cd-row rich':'cd-row';
   var typeIcons={mobile:'📱',landline:'☎️',voip:'🌐',toll_free:'📞',premium:'💎',unknown:'❓'};
   var icon=typeIcons[r.type]||'❓';
   var badgeClass='cd-badge-'+(r.type==='mobile'?'mobile':r.type==='landline'?'landline':r.type==='voip'?'voip':r.type==='toll_free'?'toll_free':'unknown');
   var flag=r.country&&r.country!=='—'?flagHtml(r.country,13):'<span style="color:var(--t3);font-size:9px">—</span>';
-  var srcColor=r.source==='numverify'||r.source==='abstractapi'?'var(--cy)':r.source==='local (fallback)'?'var(--y)':'var(--t3)';
-  row.innerHTML=
-    '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
-    +flag
-    +'<span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono)">'+esc(r.number)+'</span>'
-    +'<span class="cd-carrier-name" title="'+esc(r.carrier)+' ('+esc(r.source)+')">'+esc(r.carrier)+'<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:'+srcColor+';margin-left:5px;vertical-align:middle"></span></span>'
-    +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.country_name||r.country||'—')+'</span>'
-    +'<span class="cd-carrier-badge '+badgeClass+'">'+icon+' '+esc(r.type)+'</span>';
+  var srcColor=r.source==='waproof'?'var(--g)':r.source==='numverify'||r.source==='abstractapi'?'var(--cy)':r.source==='local (fallback)'?'var(--y)':'var(--t3)';
+  if(isRich){
+    var tz=r.time_zones&&r.time_zones.length?r.time_zones[0]:'—';
+    var validBadge=r.valid
+      ?'<span style="font-size:9px;color:var(--g);font-weight:700">✓ Valid</span>'
+      :'<span style="font-size:9px;color:var(--r);font-weight:700">✗ Invalid</span>';
+    row.innerHTML=
+      '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
+      +flag
+      +'<div style="min-width:0"><span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.international_format||r.number)+'">'+esc(r.number)+'</span>'
+      +(r.national_format?'<span style="font-size:9px;color:var(--t3)">'+esc(r.national_format)+'</span>':'')+'</div>'
+      +'<span class="cd-carrier-name" title="'+esc(r.carrier)+' ('+esc(r.source)+')">'+esc(r.carrier)+'<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:'+srcColor+';margin-left:5px;vertical-align:middle"></span></span>'
+      +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.geolocation||r.country_name||r.country||'—')+'">'+esc(r.geolocation||r.country_name||r.country||'—')+'</span>'
+      +'<span class="cd-carrier-badge '+badgeClass+'">'+icon+' '+esc(r.type)+'</span>'
+      +validBadge
+      +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.time_zones?r.time_zones.join(', '):'')+'">'+esc(tz)+'</span>';
+  } else {
+    row.innerHTML=
+      '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
+      +flag
+      +'<span style="font-size:11px;font-weight:500;color:var(--t1);font-family:var(--mono)">'+esc(r.number)+'</span>'
+      +'<span class="cd-carrier-name" title="'+esc(r.carrier)+' ('+esc(r.source)+')">'+esc(r.carrier)+'<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:'+srcColor+';margin-left:5px;vertical-align:middle"></span></span>'
+      +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.country_name||r.country||'—')+'</span>'
+      +'<span class="cd-carrier-badge '+badgeClass+'">'+icon+' '+esc(r.type)+'</span>';
+  }
   el.appendChild(row);
+  // Update dynamic filter dropdowns
+  cdUpdateFilters();
+}
+
+function cdUpdateFilters(){
+  var carriers=new Set(), countries=new Set(), types=new Set();
+  cdResults.forEach(function(r){
+    if(r.carrier&&r.carrier!=='Unknown') carriers.add(r.carrier);
+    var c=r.geolocation||r.country_name||r.country;
+    if(c&&c!=='—'&&c!=='Unknown') countries.add(c);
+    if(r.type&&r.type!=='unknown') types.add(r.type);
+  });
+  function repopulate(selId,values){
+    var sel=document.getElementById(selId);
+    var cur=sel.value;
+    var cur_opt=sel.options[0].text;
+    sel.innerHTML='<option value="">'+cur_opt+'</option>';
+    Array.from(values).sort().forEach(function(v){
+      var o=document.createElement('option');
+      o.value=v; o.textContent=v;
+      if(v===cur) o.selected=true;
+      sel.appendChild(o);
+    });
+    sel.style.display=values.size>0?'':'none';
+  }
+  repopulate('cd-filter-carrier',carriers);
+  repopulate('cd-filter-country',countries);
+  repopulate('cd-filter-type',types);
+}
+
+function cdApplyFilters(){
+  var fCarrier=document.getElementById('cd-filter-carrier').value;
+  var fCountry=document.getElementById('cd-filter-country').value;
+  var fType=document.getElementById('cd-filter-type').value;
+  var rows=document.querySelectorAll('#cd-results .cd-row');
+  var visCount=0;
+  cdResults.forEach(function(r,i){
+    var row=rows[i];
+    if(!row) return;
+    var countryVal=r.geolocation||r.country_name||r.country;
+    var show=(!fCarrier||r.carrier===fCarrier)&&(!fCountry||countryVal===fCountry)&&(!fType||r.type===fType);
+    row.style.display=show?'':'none';
+    if(show) visCount++;
+  });
+  document.getElementById('cd-res-count').textContent=visCount+' / '+cdResults.length+' results';
 }
 function cdCopyAll(){
   if(!cdResults.length){toast('No results','err');return;}
@@ -1772,6 +1976,10 @@ function cdClear(){
   document.getElementById('cd-results').innerHTML='<div class="pg-empty" id="cd-empty"><div class="pg-empty-icon">📡</div><div style="font-size:13px;font-weight:700;color:var(--t2)">Carrier Detection</div><div style="font-size:11px;text-align:center;max-width:260px;line-height:1.7;color:var(--t3)">Paste phone numbers on the left and click <strong style="color:var(--cy)">Detect Carriers</strong></div></div>';
   document.getElementById('cd-res-count').textContent='0 results';
   ['cd-k-total','cd-k-found','cd-k-mobile','cd-k-landline','cd-k-voip'].forEach(function(id){document.getElementById(id).textContent='0';});
+  ['cd-filter-carrier','cd-filter-country','cd-filter-type'].forEach(function(id){
+    var sel=document.getElementById(id);
+    if(sel){sel.innerHTML='<option value="">'+sel.options[0].text+'</option>';sel.style.display='none';}
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -2060,6 +2268,31 @@ function generateNumbers(){
   var total=pgGeneratedNumbers.length;
   document.getElementById('pg-count').textContent=total+' numbers'+(generated.length<parseInt(document.getElementById('pg-qty').value)?'  ⚠ some dupes skipped':'');
   document.getElementById('pg-meta').textContent=pgSelected.prefix+' '+pgSelected.name+' · '+type+' · '+fmt+' · session total: '+total;
+
+  // Enrich carrier cells via real API (batch, non-blocking)
+  var startOffset = pgGeneratedNumbers.length - generated.length;
+  generated.forEach(function(item, i){
+    var rowIdx = startOffset + i; // 0-based index in pgGeneratedNumbers
+    var e164 = item.raw.country.prefix + item.raw.area + item.raw.line;
+    parsePhoneAPI(e164).then(function(d){
+      if(!d) return;
+      // Update the stored item
+      pgGeneratedNumbers[rowIdx]._apiData = d;
+      // Find the DOM row by index and patch the carrier span
+      var rows = document.querySelectorAll('#pg-numbers-list .pg-num-row');
+      var domRow = rows[rowIdx];
+      if(!domRow) return;
+      var carrierSpan = domRow.querySelector('.pg-carrier-cell');
+      if(!carrierSpan) return;
+      var typeIcons={mobile:'📱',landline:'☎️',voip:'🌐',toll_free:'📞',premium:'💎'};
+      var t = (d.type||'').toLowerCase().replace(/\s+/g,'_');
+      var icon = typeIcons[t]||'📡';
+      var carrier = d.carrier || d.type || '—';
+      var geo = d.geolocation||'';
+      carrierSpan.textContent = icon+' '+carrier;
+      carrierSpan.title = carrier+(geo?' · '+geo:'')+(d.time_zones&&d.time_zones.length?' · '+d.time_zones[0]:'');
+    });
+  });
 }
 
 function renderPgResults(list){
@@ -2072,7 +2305,7 @@ function renderPgResults(list){
   el.innerHTML=list.map(function(item,i){
     var iso=item.raw.country.code;
     var flagEl='<span class="fi fi-'+iso.toLowerCase()+'" style="font-size:13px;line-height:1"></span>';
-    var carrierHtml='<span style="font-size:9px;color:var(--cy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.carrier?item.carrier.carrier:'—')+'</span>';
+    var carrierHtml='<span class="pg-carrier-cell" style="font-size:9px;color:var(--cy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.carrier?item.carrier.carrier:'⏳')+'</span>';
     var typeColor=typeColors[item.type]||'var(--t2)';
     var typeIcon=typeIcons[item.type]||'📱';
     return '<div class="pg-num-row">'
@@ -2101,7 +2334,7 @@ function appendPgResults(list){
   list.forEach(function(item,i){
     var iso=item.raw.country.code;
     var flagEl='<span class="fi fi-'+iso.toLowerCase()+'" style="font-size:13px;line-height:1"></span>';
-    var carrierHtml='<span style="font-size:9px;color:var(--cy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.carrier?item.carrier.carrier:'—')+'</span>';
+    var carrierHtml='<span class="pg-carrier-cell" style="font-size:9px;color:var(--cy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.carrier?item.carrier.carrier:'⏳')+'</span>';
     var typeColor=typeColors[item.type]||'var(--t2)';
     var typeIcon=typeIcons[item.type]||'📱';
     var row=document.createElement('div');
@@ -2511,10 +2744,21 @@ async function bsStart(){
       number:num, status:'wait', account:acc.label,
       country:contactData.country||getIsoFromNumber(num)||null,
       accountType:contactData.accountType||null,
-      carrier:getCarrierLocal(num),
+      carrier:null,   // will be enriched by API asynchronously
       waStatus:contactData.status||null,
-      time:new Date().toISOString()
+      time:new Date().toISOString(),
+      _apiData:null
     };
+    // Kick off API enrichment in background (non-blocking)
+    parsePhoneAPI(num).then(function(d){
+      if(!d) return;
+      logEntry._apiData = d;
+      logEntry.carrier = d.carrier ? {carrier:d.carrier,type:d.type||''} : logEntry.carrier;
+      if(!logEntry.country && d.region_code) logEntry.country = d.region_code;
+      // Re-render row with enriched data
+      var rowEl = document.getElementById('bs-row-'+(bsLog.indexOf(logEntry)+1));
+      if(rowEl) bsFillRow(rowEl, logEntry, bsLog.indexOf(logEntry)+1);
+    });
     bsLog.push(logEntry);
     bsRenderLogRow(logEntry, i+1);
 
@@ -2614,7 +2858,16 @@ function bsFillRow(row, entry, idx){
   var flagHtml=entry.country?'<span class="fi fi-'+entry.country.toLowerCase()+'" style="font-size:13px"></span>':'—';
   var typeMap={personal:'👤 Personal',business:'🏢 Business',enterprise:'🏛 Enterprise'};
   var typeHtml=entry.accountType?typeMap[entry.accountType]||entry.accountType:'<span style="color:var(--t3)">—</span>';
-  var carrierHtml=entry.carrier?'<span style="font-size:9px;color:var(--cy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(entry.carrier.carrier)+'</span>':'<span style="color:var(--t3)">—</span>';
+  // Carrier: prefer real API data
+  var carrierName = entry._apiData&&entry._apiData.carrier ? entry._apiData.carrier : (entry.carrier?entry.carrier.carrier:null);
+  var carrierType = entry._apiData&&entry._apiData.type ? entry._apiData.type : (entry.carrier?entry.carrier.type:'');
+  var typeIcons={mobile:'📱',landline:'☎️',voip:'🌐',toll_free:'📞',premium:'💎'};
+  var cIcon = typeIcons[(carrierType||'').toLowerCase().replace(/\s+/g,'_')] || '';
+  var geo = entry._apiData&&entry._apiData.geolocation ? entry._apiData.geolocation : '';
+  var tz = entry._apiData&&entry._apiData.time_zones&&entry._apiData.time_zones.length ? entry._apiData.time_zones[0] : '';
+  var carrierHtml = carrierName
+    ? '<span style="font-size:9px;color:var(--cy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(carrierName+(geo?' · '+geo:'')+(tz?' · '+tz:''))+'">'+cIcon+' '+esc(carrierName)+'</span>'
+    : '<span style="color:var(--t3);font-size:9px">⏳</span>';
   var waStatusHtml=entry.waStatus?'<span style="font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(entry.waStatus)+'">'+esc(entry.waStatus.slice(0,18))+(entry.waStatus.length>18?'…':'')+'</span>':'<span style="color:var(--t3)">—</span>';
   var statusClass=entry.status==='sent'?'bs-status-sent':entry.status==='fail'?'bs-status-fail':entry.status==='wait'?'bs-status-wait':'bs-status-skip';
   var statusLabel=entry.status==='sent'?'✓ Sent':entry.status==='fail'?'✕ '+(entry.reason||'Failed'):entry.status==='wait'?'⏳ Sending…':'⊘ Skip';
@@ -2660,7 +2913,7 @@ socket.on('bs_send_result', function(d){
   // handled via callback in bsStart
 });
 
-// ── NEW v17: RESULT FILTER ─────────────────────────────────────────────────
+// ── NEW v18: RESULT FILTER ─────────────────────────────────────────────────
 var currentResultFilter = 'all';
 function setResultFilter(filter) {
   currentResultFilter = filter;
@@ -2681,12 +2934,18 @@ function setResultFilter(filter) {
   applyResultFilter();
 }
 function applyResultFilter() {
+  var fCarrier = (document.getElementById('ab-filter-carrier')||{}).value || '';
+  var fCountry = (document.getElementById('ab-filter-country')||{}).value || '';
   var rows = document.querySelectorAll('.rrow');
-  var idx = 0;
-  rows.forEach(function(row) {
+  rows.forEach(function(row, i) {
+    var r = allResults[i];
     var isValid = row.querySelector('.chip.on') !== null;
-    var show = currentResultFilter === 'all' || (currentResultFilter === 'valid' && isValid) || (currentResultFilter === 'invalid' && !isValid);
-    row.style.display = show ? '' : 'none';
+    var passStatus = currentResultFilter === 'all'
+      || (currentResultFilter === 'valid' && isValid)
+      || (currentResultFilter === 'invalid' && !isValid);
+    var passCarrier = !fCarrier || (r && r._apiCarrier === fCarrier);
+    var passCountry = !fCountry || (r && r._apiCountryName === fCountry);
+    row.style.display = (passStatus && passCarrier && passCountry) ? '' : 'none';
   });
 }
 
