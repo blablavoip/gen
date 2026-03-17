@@ -527,19 +527,34 @@ async function checkNumber(raw, acc) {
 }
 
 // ── Queue checker ─────────────────────────────────────────────────────────
-async function processQueue(numbers) {
+async function processQueue(numbers, settings = {}) {
   if (isChecking) return;
   const ready = Array.from(accounts.values()).filter(a => a.state === 'ready' && a.client && !a.dead);
   if (!ready.length) { io.emit('error_msg', { message: 'No connected accounts.' }); return; }
   isChecking = true; results = []; stats = { valid: 0, invalid: 0, total: numbers.length };
-  let rrIndex = 0;
-  let baseDelay = Math.max(500, Math.floor(1500 / ready.length));
-  let consecutiveErrors = 0;
 
-  for (let i = 0; i < numbers.length; i++) {
-    if (!isChecking) break;
-    const num = numbers[i].trim(); if (!num) continue;
-    io.emit('progress', { current: i+1, total: numbers.length, percent: Math.round(((i+1)/numbers.length)*100) });
+  // Apply settings from frontend
+  const delayMs      = settings.delayMs      ?? 1200;
+  const jitterMs     = settings.jitterMs     ?? 0;
+  const adaptive     = settings.adaptive     !== false;
+  const batchEnabled = settings.batchEnabled ?? false;
+  const batchN       = settings.batchN       ?? 50;
+  const batchPauseMs = settings.batchPauseMs ?? 30000;
+  const concurrency  = Math.min(settings.concurrency ?? 2, ready.length);
+
+  console.log(`[checker] Starting: ${numbers.length} numbers, delay=${delayMs}ms, jitter=${jitterMs}ms, concurrency=${concurrency}, adaptive=${adaptive}, batch=${batchEnabled?batchN+'@'+batchPauseMs+'ms':'off'}`);
+
+  let rrIndex = 0;
+  let consecutiveErrors = 0;
+  let checkedInBatch = 0;
+
+  // Process with configurable concurrency using a sliding window
+  const queue   = [...numbers];
+  let inFlight  = 0;
+  let globalIdx = 0;
+
+  async function processOne(num, idx) {
+    if (!isChecking) return;
     let acc = null;
     for (let t = 0; t < ready.length; t++) {
       const c = ready[rrIndex % ready.length]; rrIndex++;
@@ -547,25 +562,56 @@ async function processQueue(numbers) {
     }
     if (!acc) {
       const r = { number: num, registered: false, error: 'No ready account', account: '—' };
-      results.push(r); stats.invalid++; io.emit('result', { result: r, index: i, stats }); continue;
+      results.push(r); stats.invalid++;
+      io.emit('result', { result: r, index: idx, stats });
+      io.emit('progress', { current: idx+1, total: numbers.length, percent: Math.round(((idx+1)/numbers.length)*100) });
+      return;
     }
+    io.emit('progress', { current: idx+1, total: numbers.length, percent: Math.round(((idx+1)/numbers.length)*100) });
     const result = await checkNumber(num, acc);
     results.push(result);
     if (result.registered) stats.valid++; else stats.invalid++;
-    io.emit('result', { result, index: i, stats });
+    io.emit('result', { result, index: idx, stats });
 
-    // Adaptive delay — slow down on rate limit errors
-    if (result.error && isRateLimitErr(result.error)) {
+    // Adaptive delay on rate-limit errors
+    if (adaptive && result.error && isRateLimitErr(result.error)) {
       consecutiveErrors++;
-      const penaltyDelay = Math.min(consecutiveErrors * 3000, 15000);
-      console.warn(`[processQueue] Rate-limit detected, adding ${penaltyDelay}ms penalty delay`);
-      if (i < numbers.length - 1 && isChecking) await sleep(penaltyDelay);
+      const penalty = Math.min(consecutiveErrors * 3000, 15000);
+      console.warn(`[checker] Rate-limit on ${num}, penalty ${penalty}ms`);
+      await sleep(penalty);
     } else {
-      consecutiveErrors = Math.max(0, consecutiveErrors - 1); // cool down
-      if (i < numbers.length - 1 && isChecking) await sleep(baseDelay);
+      consecutiveErrors = Math.max(0, consecutiveErrors - 1);
     }
   }
-  isChecking = false; io.emit('done', { results, stats });
+
+  // Batch processing with configurable concurrency
+  for (let i = 0; i < numbers.length; i += concurrency) {
+    if (!isChecking) break;
+
+    // Batch pause check
+    if (batchEnabled && checkedInBatch >= batchN && i < numbers.length) {
+      checkedInBatch = 0;
+      console.log(`[checker] Batch pause: ${batchPauseMs}ms`);
+      io.emit('toast', { msg: `⏸ Batch pause: ${Math.round(batchPauseMs/1000)}s…`, type: 'warn' });
+      await sleep(batchPauseMs);
+      if (!isChecking) break;
+    }
+
+    // Fire up to `concurrency` checks in parallel
+    const slice = numbers.slice(i, i + concurrency);
+    await Promise.all(slice.map((num, offset) => processOne(num, i + offset)));
+    checkedInBatch += slice.length;
+
+    // Delay + jitter between batches
+    if (i + concurrency < numbers.length && isChecking) {
+      const jitter = jitterMs > 0 ? Math.floor(Math.random() * jitterMs * 2) - jitterMs : 0;
+      const wait   = Math.max(200, delayMs + jitter);
+      await sleep(wait);
+    }
+  }
+
+  isChecking = false;
+  io.emit('done', { results, stats });
 }
 
 async function sendMessage(numbers, message) {
@@ -740,12 +786,12 @@ io.on('connection', (socket) => {
     socket.emit('profile_updated', { id: numId, profileName: acc.profileName, profilePic: acc.profilePic });
   });
 
-  socket.on('check', ({ numbers }) => {
+  socket.on('check', ({ numbers, settings }) => {
     if (!Array.from(accounts.values()).some(a => a.state === 'ready'))
       return socket.emit('error_msg', { message: 'No accounts connected.' });
     if (isChecking) return socket.emit('error_msg', { message: 'Already checking.' });
     if (!numbers?.length) return socket.emit('error_msg', { message: 'No numbers.' });
-    processQueue(numbers);
+    processQueue(numbers, settings || {});
   });
 
   socket.on('send_message', async ({ numbers, message }) => {

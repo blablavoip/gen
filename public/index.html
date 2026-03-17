@@ -558,6 +558,18 @@ body.dark .ac-qr-wrap{background:var(--s2)}
 .info-badge{display:flex;gap:8px;padding:9px 12px;background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.15);border-radius:8px;font-size:10px;color:var(--b2);line-height:1.6}
 .info-badge .material-symbols-outlined{font-size:16px;flex-shrink:0;margin-top:1px}
 
+/* ── CHECKER SPEED / ANTI-BAN PANEL ── */
+.chk-opts{margin:8px 0 0;padding:8px 12px;background:rgba(0,109,47,.04);border:1.5px solid rgba(0,109,47,.15);border-radius:var(--radius-sm)}
+.chk-opts-title{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.09em;cursor:pointer;user-select:none}
+.chk-opts-toggle{margin-left:auto;background:none;border:none;color:var(--g);cursor:pointer;font-size:12px;line-height:1;padding:0}
+.chk-toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.chk-toggle{display:flex;align-items:center;gap:5px;padding:5px 7px;background:var(--surface);border:1.5px solid var(--border);border-radius:6px;cursor:pointer;transition:all .12s;user-select:none}
+.chk-toggle.on{border-color:rgba(0,109,47,.3);background:rgba(0,109,47,.05)}
+.chk-toggle-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .12s}
+.chk-toggle.on .chk-toggle-dot{background:var(--g)}
+.chk-toggle-lbl{font-size:8.5px;color:var(--t3);font-weight:500}
+.chk-toggle.on .chk-toggle-lbl{color:var(--g)}
+
 /* ── AI GENERATION PANEL ── */
 .ai-panel{background:linear-gradient(135deg,rgba(106,27,154,.06),rgba(0,121,107,.04));border:1.5px solid rgba(106,27,154,.2);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
 .ai-panel-title{font-size:9px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px}
@@ -575,7 +587,10 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
 .ai-prompt-ta:focus{border-color:rgba(106,27,154,.5)}
 .ai-prompt-ta::placeholder{color:var(--t4)}
 .ai-gen-row{display:flex;gap:5px;align-items:center}
-.ai-gen-btn{height:28px;padding:0 12px;background:linear-gradient(135deg,#6a1b9a,var(--p));border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font);font-size:9px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ai-mode-btn{flex:1;height:28px;background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--t3);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s}
+.ai-mode-btn.active{background:var(--p-bg);border-color:rgba(106,27,154,.4);color:var(--p)}
+.ai-mode-btn:hover:not(.active){border-color:var(--border3);color:var(--t2)}
+.ai-gen-btn{width:100%;height:34px;padding:0 12px;background:linear-gradient(135deg,#6a1b9a,var(--p));border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
 .ai-gen-btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(106,27,154,.3)}
 .ai-gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .ai-rotate-field{display:flex;align-items:center;gap:6px;flex:1}
@@ -700,6 +715,88 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
           <div class="num-badge" id="num-badge">0</div>
         </div>
         <div class="hint">One number per line · E.164 format</div>
+
+        <!-- ── CHECKER SPEED & ANTI-BAN ── -->
+        <div class="chk-opts">
+          <div class="chk-opts-title">
+            <span class="material-symbols-outlined" style="font-size:12px">shield</span>
+            Speed & Anti-Ban
+            <button class="chk-opts-toggle" onclick="chkOptsToggle()" id="chk-opts-toggle-btn">▾</button>
+          </div>
+          <div id="chk-opts-body" style="display:none;flex-direction:column;gap:7px;padding-top:6px">
+
+            <!-- Delay slider -->
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                <span style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Delay / check</span>
+                <span style="font-size:9px;color:var(--g);font-family:var(--mono);font-weight:700" id="chk-delay-val">1.2s</span>
+              </div>
+              <input type="range" style="width:100%;accent-color:var(--g)" id="chk-delay" min="500" max="10000" step="100" value="1200"
+                oninput="document.getElementById('chk-delay-val').textContent=(this.value/1000).toFixed(1)+'s'">
+              <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--t4);margin-top:1px">
+                <span>0.5s fast</span><span>10s safe</span>
+              </div>
+            </div>
+
+            <!-- Jitter slider -->
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                <span style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Random jitter ±</span>
+                <span style="font-size:9px;color:var(--g);font-family:var(--mono);font-weight:700" id="chk-jitter-val">0s</span>
+              </div>
+              <input type="range" style="width:100%;accent-color:var(--g)" id="chk-jitter" min="0" max="5000" step="100" value="0"
+                oninput="document.getElementById('chk-jitter-val').textContent=(this.value/1000).toFixed(1)+'s'">
+            </div>
+
+            <!-- Anti-ban toggles -->
+            <div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:2px">Anti-Ban Options</div>
+            <div class="chk-toggle-grid">
+              <div class="chk-toggle on" id="chkban-shuffle" onclick="this.classList.toggle('on')">
+                <div class="chk-toggle-dot"></div>
+                <div class="chk-toggle-lbl">Shuffle numbers</div>
+              </div>
+              <div class="chk-toggle on" id="chkban-multi-acct" onclick="this.classList.toggle('on')">
+                <div class="chk-toggle-dot"></div>
+                <div class="chk-toggle-lbl">Multi-account</div>
+              </div>
+              <div class="chk-toggle on" id="chkban-adaptive" onclick="this.classList.toggle('on')">
+                <div class="chk-toggle-dot"></div>
+                <div class="chk-toggle-lbl">Adaptive delay</div>
+              </div>
+              <div class="chk-toggle" id="chkban-batch" onclick="chkBatchToggle(this)">
+                <div class="chk-toggle-dot"></div>
+                <div class="chk-toggle-lbl">Batch pause</div>
+              </div>
+            </div>
+
+            <!-- Batch pause config -->
+            <div id="chk-batch-row" style="display:none;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+                <span style="font-size:9px;color:var(--t3)">Pause every</span>
+                <span style="font-size:9px;color:var(--y);font-family:var(--mono);font-weight:700" id="chk-batch-n-val">50</span>
+                <span style="font-size:9px;color:var(--t3)">numbers for</span>
+                <span style="font-size:9px;color:var(--y);font-family:var(--mono);font-weight:700" id="chk-batch-pause-val">30s</span>
+              </div>
+              <input type="range" style="width:100%;accent-color:var(--y)" id="chk-batch-n" min="10" max="200" step="10" value="50"
+                oninput="document.getElementById('chk-batch-n-val').textContent=this.value">
+              <input type="range" style="width:100%;accent-color:var(--y)" id="chk-batch-pause" min="5" max="300" step="5" value="30"
+                oninput="document.getElementById('chk-batch-pause-val').textContent=this.value+'s'">
+            </div>
+
+            <!-- Concurrency -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;flex:1">Max concurrent</span>
+              <select id="chk-concurrency" style="height:22px;padding:0 6px;background:var(--s1);border:1.5px solid var(--border);border-radius:5px;font-size:9px;color:var(--t1);outline:none">
+                <option value="1">1 (safest)</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="5">5 (fastest)</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
         <div class="cta-row">
           <button class="btn-check" id="btn-check" disabled>
             <span class="material-symbols-outlined" style="font-size:13px">play_arrow</span>
@@ -1106,41 +1203,83 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
                 <div class="ai-panel-title">
                   <span class="ai-dot"></span>
                   AI Message Generation
-                  <span style="margin-left:auto">
+                  <span style="margin-left:auto;display:flex;align-items:center;gap:6px">
+                    <span style="font-size:9px;color:var(--t3)" id="ai-state-lbl">OFF</span>
                     <label class="ai-switch" title="Enable AI message generation">
                       <input type="checkbox" id="ai-enabled" onchange="aiToggle()">
                       <span class="ai-slider"></span>
                     </label>
                   </span>
                 </div>
-                <div id="ai-body" style="display:none;flex-direction:column;gap:8px">
-                  <div class="ai-prompt-area">
-                    <div style="font-size:9px;color:var(--t3);margin-bottom:3px">Describe the message you want to send:</div>
-                    <textarea class="ai-prompt-ta" id="ai-prompt" placeholder="e.g. A friendly promotional message about our summer sale with 20% discount..."></textarea>
-                  </div>
-                  <div class="ai-gen-row">
-                    <button class="ai-gen-btn" id="ai-gen-btn" onclick="aiGenerate()">
-                      <span class="material-symbols-outlined" style="font-size:12px">auto_awesome</span>
-                      Generate Now
+                <div id="ai-body" style="display:none;flex-direction:column;gap:10px">
+
+                  <!-- Mode selector -->
+                  <div style="display:flex;gap:5px">
+                    <button class="ai-mode-btn active" id="ai-mode-manual" onclick="aiSetMode('manual')">
+                      ✏️ Manual
                     </button>
-                    <div class="ai-rotate-field">
-                      <span class="ai-rotate-label">Regenerate every</span>
-                      <input class="ai-rotate-input" id="ai-rotate-n" type="number" value="5" min="1" max="100">
-                      <span class="ai-rotate-label">sends</span>
-                    </div>
+                    <button class="ai-mode-btn" id="ai-mode-auto" onclick="aiSetMode('auto')">
+                      🔄 Auto-rotate
+                    </button>
                   </div>
+
+                  <!-- Prompt -->
+                  <div class="ai-prompt-area">
+                    <div style="font-size:9px;color:var(--t3);margin-bottom:3px">Describe your message:</div>
+                    <textarea class="ai-prompt-ta" id="ai-prompt"
+                      placeholder="e.g. Friendly promo message about 20% summer sale, include a call to action..."></textarea>
+                  </div>
+
+                  <!-- Model + keep links -->
                   <div style="display:flex;gap:6px;align-items:center">
                     <select class="bs-select" id="ai-model" style="flex:1;height:26px;font-size:9px;padding:0 8px">
-                      <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
-                      <option value="gpt-4o-mini">GPT-4o Mini</option>
-                      <option value="claude-3-5-haiku">Claude 3.5 Haiku</option>
-                      <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                      <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+                      <option value="gemini-2.5-flash-preview-05-20" selected>⚡ Gemini 2.5 Flash</option>
+                      <option value="gpt-4o-mini">🤖 GPT-4o Mini</option>
+                      <option value="claude-3-5-haiku">🔵 Claude Haiku</option>
+                      <option value="meta-llama/llama-3.1-8b-instruct">🦙 Llama 3.1 8B</option>
                     </select>
-                    <label style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3);white-space:nowrap">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3);white-space:nowrap;cursor:pointer">
                       <input type="checkbox" id="ai-keep-links" checked style="accent-color:var(--p)"> Keep links
                     </label>
                   </div>
-                  <div class="ai-status" id="ai-status">AI ready — generate a message or enable auto-rotate</div>
+
+                  <!-- Generate button (Manual mode) -->
+                  <div id="ai-manual-row" style="display:flex;flex-direction:column;gap:5px">
+                    <button class="ai-gen-btn" id="ai-gen-btn" onclick="aiGenerate()">
+                      <span class="material-symbols-outlined" style="font-size:13px">auto_awesome</span>
+                      Generate Message
+                    </button>
+                    <div style="font-size:9px;color:var(--t3);text-align:center">
+                      Generated text replaces your message above
+                    </div>
+                  </div>
+
+                  <!-- Auto-rotate config (Auto mode) -->
+                  <div id="ai-auto-row" style="display:none;flex-direction:column;gap:7px">
+                    <div style="display:flex;align-items:center;gap:8px;background:rgba(106,27,154,.06);border:1px solid rgba(106,27,154,.18);border-radius:7px;padding:8px 10px">
+                      <span class="material-symbols-outlined" style="font-size:14px;color:var(--p)">refresh</span>
+                      <div style="flex:1">
+                        <div style="font-size:9px;font-weight:700;color:var(--p)">Auto-regenerate every</div>
+                        <div style="font-size:8px;color:var(--t3)">New AI message generated every N sends</div>
+                      </div>
+                      <input class="ai-rotate-input" id="ai-rotate-n" type="number" value="5" min="1" max="999"
+                        style="width:48px;text-align:center">
+                      <span style="font-size:9px;color:var(--t3)">sends</span>
+                    </div>
+                    <div style="display:flex;gap:5px">
+                      <button class="ai-gen-btn" id="ai-gen-btn2" onclick="aiGenerate()" style="flex:1">
+                        <span class="material-symbols-outlined" style="font-size:13px">auto_awesome</span>
+                        Generate First Message
+                      </button>
+                    </div>
+                    <div style="font-size:9px;color:var(--t3)">
+                      💡 Generate a starting message now, then AI will auto-generate a new one every <span id="ai-rotate-preview" style="color:var(--p);font-weight:700">5</span> sends during the campaign.
+                    </div>
+                  </div>
+
+                  <!-- Status line -->
+                  <div class="ai-status" id="ai-status">Enter a prompt and click Generate</div>
                 </div>
               </div>
 
@@ -1618,18 +1757,60 @@ socket.on('profile_updated', function(d){
 // ─────────────────────────────────────────────────────────────────────────
 // CHECKER
 // ─────────────────────────────────────────────────────────────────────────
+function chkOptsToggle(){
+  var body = document.getElementById('chk-opts-body');
+  var btn  = document.getElementById('chk-opts-toggle-btn');
+  var open = body.style.display === 'none';
+  body.style.display = open ? 'flex' : 'none';
+  body.style.flexDirection = 'column';
+  if(btn) btn.textContent = open ? '▴' : '▾';
+}
+
+function chkBatchToggle(el){
+  el.classList.toggle('on');
+  var row = document.getElementById('chk-batch-row');
+  if(row) row.style.display = el.classList.contains('on') ? 'flex' : 'none';
+  if(row) row.style.flexDirection = 'column';
+}
+
+function chkGetSettings(){
+  return {
+    delayMs     : parseInt(document.getElementById('chk-delay')?.value||1200),
+    jitterMs    : parseInt(document.getElementById('chk-jitter')?.value||0),
+    shuffle     : document.getElementById('chkban-shuffle')?.classList.contains('on'),
+    adaptive    : document.getElementById('chkban-adaptive')?.classList.contains('on'),
+    batchEnabled: document.getElementById('chkban-batch')?.classList.contains('on'),
+    batchN      : parseInt(document.getElementById('chk-batch-n')?.value||50),
+    batchPauseMs: parseInt(document.getElementById('chk-batch-pause')?.value||30)*1000,
+    concurrency : parseInt(document.getElementById('chk-concurrency')?.value||2),
+  };
+}
+
 function startCheck(){
-  var nums=document.getElementById('num-ta').value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
-  if(!nums.length){toast('Enter at least one number','err');return;}
+  var rawNums=document.getElementById('num-ta').value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  if(!rawNums.length){toast('Enter at least one number','err');return;}
   if(checking) return;
+
+  var settings = chkGetSettings();
+
+  // Shuffle if enabled
+  if(settings.shuffle){
+    for(var i=rawNums.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var tmp=rawNums[i]; rawNums[i]=rawNums[j]; rawNums[j]=tmp;
+    }
+    document.getElementById('num-ta').value = rawNums.join('\n');
+  }
+
   checking=true; allResults=[];
   document.getElementById('rlist').innerHTML='';
   document.getElementById('empty-state').style.display='none';
-  updateKpis({valid:0,invalid:0,total:nums.length});
+  updateKpis({valid:0,invalid:0,total:rawNums.length});
   document.getElementById('btn-check').disabled=true;
   document.getElementById('btn-check').innerHTML='<div class="spin"></div> Checking…';
   document.getElementById('btn-stop').classList.add('show');
-  socket.emit('check',{numbers:nums});
+  // Send settings with check event so server can use them
+  socket.emit('check', { numbers: rawNums, settings: settings });
 }
 function stopCheck(){ socket.emit('stop'); checking=false; resetCheckBtn(); document.getElementById('btn-stop').classList.remove('show'); document.getElementById('prog-row').classList.remove('show'); }
 function resetCheckBtn(){
@@ -2994,73 +3175,159 @@ function bsGetAccount(){
 // ─────────────────────────────────────────────────────────────────────────
 // AI MESSAGE GENERATION (Puter.js)
 // ─────────────────────────────────────────────────────────────────────────
-var _aiCurrentMessage = '';   // latest AI-generated message
-var _aiSendCounter    = 0;    // tracks sends since last AI generation
-var _aiRotateN        = 5;    // regenerate every N sends
+var _aiMode          = 'manual';  // 'manual' | 'auto'
+var _aiSendCounter   = 0;         // sends since last AI generation
+var _aiLastGenerated = '';        // last AI-generated text (for fallback)
 
 function aiToggle(){
-  var on = document.getElementById('ai-enabled').checked;
+  var on   = document.getElementById('ai-enabled').checked;
   var body = document.getElementById('ai-body');
-  body.style.display = on ? 'flex' : 'none';
-  body.style.flexDirection = on ? 'column' : '';
+  var lbl  = document.getElementById('ai-state-lbl');
+  body.style.display    = on ? 'flex'   : 'none';
+  body.style.flexDirection = 'column';
+  if(lbl) lbl.textContent = on ? 'ON' : 'OFF';
+  if(on)  lbl.style.color = 'var(--p)';
+  else    lbl.style.color = 'var(--t3)';
 }
 
+function aiSetMode(mode){
+  _aiMode = mode;
+  document.getElementById('ai-mode-manual').classList.toggle('active', mode==='manual');
+  document.getElementById('ai-mode-auto').classList.toggle('active', mode==='auto');
+  document.getElementById('ai-manual-row').style.display = mode==='manual' ? 'flex' : 'none';
+  document.getElementById('ai-auto-row').style.display   = mode==='auto'   ? 'flex' : 'none';
+  // Flex direction fix for each row
+  document.getElementById('ai-manual-row').style.flexDirection = 'column';
+  document.getElementById('ai-auto-row').style.flexDirection   = 'column';
+}
+
+// Wire up the rotate-n input to update the preview span
+document.addEventListener('DOMContentLoaded', function(){
+  var rotN = document.getElementById('ai-rotate-n');
+  if(rotN) rotN.addEventListener('input', function(){
+    var prev = document.getElementById('ai-rotate-preview');
+    if(prev) prev.textContent = this.value||'5';
+  });
+});
+
 async function aiGenerate(){
-  var prompt    = document.getElementById('ai-prompt').value.trim();
+  var prompt    = (document.getElementById('ai-prompt').value||'').trim();
   var model     = document.getElementById('ai-model').value;
   var keepLinks = document.getElementById('ai-keep-links').checked;
   var origMsg   = document.getElementById('bs-message').value.trim();
 
-  if(!prompt){ toast('Enter an AI prompt first','err'); return; }
+  if(!prompt){
+    toast('Enter a prompt in the AI panel first','err');
+    document.getElementById('ai-status').className = 'ai-status err';
+    document.getElementById('ai-status').textContent = '✗ Prompt is empty — describe your message above';
+    return null;
+  }
 
+  // Disable all generate buttons
+  ['ai-gen-btn','ai-gen-btn2'].forEach(function(id){
+    var b = document.getElementById(id); if(b) b.disabled = true;
+  });
   var statusEl = document.getElementById('ai-status');
-  var btn      = document.getElementById('ai-gen-btn');
-  btn.disabled = true;
-  statusEl.className = 'ai-status spin';
-  statusEl.textContent = '✦ Generating message…';
+  statusEl.className   = 'ai-status spin';
+  statusEl.textContent = '✦ Generating with ' + model + '…';
 
-  // Extract links from original message to preserve them
+  // Preserve links from original message
   var links = [];
   if(keepLinks && origMsg){
-    var urlRe = /https?:\/\/[^\s]+/g;
-    links = origMsg.match(urlRe) || [];
+    links = origMsg.match(/https?:\/\/[^\s]+/g) || [];
   }
 
-  var systemPrompt = 'You are a professional message writer for WhatsApp. Write a single natural, engaging message.'
-    +' No subject line. No "Dear..." greeting unless specified. No markdown. Plain text only.'
-    +' Keep it concise (2–5 sentences max) unless the user asks for more.'
-    +(links.length ? ' You MUST include these exact URLs in your message: '+links.join(' ')+'. Do not modify the URLs.' : '');
+  var systemPrompt =
+    'You are a professional WhatsApp message copywriter. '
+    +'Write ONE single message only. No subject line. No "Dear..." opener unless asked. '
+    +'No markdown (no asterisks, no bullet points). Plain text only. '
+    +'Be natural, engaging, concise — 2 to 5 sentences unless asked for more. '
+    +'Never add explanations, just the message text.'
+    +(links.length ? ' You MUST include these exact URLs unchanged in your message: '+links.join(' ') : '');
 
   try {
-    if(typeof puter === 'undefined') throw new Error('Puter not loaded');
-    var response = await puter.ai.chat(prompt, { model: model, systemPrompt: systemPrompt });
-    var text = (typeof response === 'string') ? response : (response?.message?.content || response?.content || String(response));
-    // Clean up any residual markdown
-    text = text.replace(/\*\*/g,'').replace(/^\s*[-•]\s/gm,'').trim();
-    _aiCurrentMessage = text;
+    if(typeof puter === 'undefined') throw new Error('Puter.js not loaded — check your internet connection');
+
+    var response = await puter.ai.chat(prompt, {
+      model      : model,
+      systemPrompt: systemPrompt,
+    });
+
+    // Extract text from various response shapes
+    var text = '';
+    if(typeof response === 'string'){
+      text = response;
+    } else if(response && response.message && response.message.content){
+      // content can be string or array of parts
+      if(typeof response.message.content === 'string'){
+        text = response.message.content;
+      } else if(Array.isArray(response.message.content)){
+        text = response.message.content.map(function(p){ return typeof p === 'string' ? p : (p.text||''); }).join('');
+      }
+    } else if(response && response.content){
+      text = typeof response.content === 'string' ? response.content : String(response.content);
+    } else {
+      text = String(response);
+    }
+
+    // Clean residual markdown
+    text = text
+      .replace(/\*\*(.*?)\*\*/g,'$1')
+      .replace(/\*(.*?)\*/g,'$1')
+      .replace(/^\s*[-•*]\s/gm,'')
+      .replace(/^#+\s*/gm,'')
+      .trim();
+
+    if(!text) throw new Error('AI returned empty response');
+
+    _aiLastGenerated = text;
     document.getElementById('bs-message').value = text;
     bsPreviewMessage();
-    statusEl.className = 'ai-status ok';
-    statusEl.textContent = '✓ Message generated — you can edit it above';
+
+    statusEl.className   = 'ai-status ok';
+    statusEl.textContent = '✓ Generated — edit above if needed';
+
+    if(_aiMode === 'auto'){
+      var rotN = parseInt(document.getElementById('ai-rotate-n').value)||5;
+      statusEl.textContent = '✓ Generated — will regenerate every '+rotN+' sends';
+    }
+
+    ['ai-gen-btn','ai-gen-btn2'].forEach(function(id){
+      var b = document.getElementById(id); if(b) b.disabled = false;
+    });
+    return text;
+
   } catch(e){
-    statusEl.className = 'ai-status err';
-    statusEl.textContent = '✗ ' + (e.message || 'AI generation failed');
+    statusEl.className   = 'ai-status err';
+    statusEl.textContent = '✗ ' + (e.message||'Generation failed');
+    toast('AI: ' + (e.message||'failed'), 'err');
+    ['ai-gen-btn','ai-gen-btn2'].forEach(function(id){
+      var b = document.getElementById(id); if(b) b.disabled = false;
+    });
+    return null;
   }
-  btn.disabled = false;
 }
 
-// Called during bsStart loop to check if AI rotation is needed
+// Called inside bsStart loop — auto-rotates message in auto mode
 async function aiMaybeRotate(currentMsg){
-  if(!document.getElementById('ai-enabled')?.checked) return currentMsg;
-  _aiRotateN = parseInt(document.getElementById('ai-rotate-n').value)||5;
+  var enabled = document.getElementById('ai-enabled')?.checked;
+  if(!enabled || _aiMode !== 'auto') return currentMsg;
+
+  var rotN = parseInt(document.getElementById('ai-rotate-n').value)||5;
   _aiSendCounter++;
-  if(_aiSendCounter < _aiRotateN) return currentMsg;
-  _aiSendCounter = 0;
-  // Generate new message in background
+
+  // Update status with counter progress
   var statusEl = document.getElementById('ai-status');
-  if(statusEl){ statusEl.className='ai-status spin'; statusEl.textContent='✦ Auto-regenerating…'; }
-  await aiGenerate();
-  return document.getElementById('bs-message').value.trim() || currentMsg;
+  if(statusEl) statusEl.textContent = '⟳ AI rotate: '+_aiSendCounter+'/'+rotN+' sends';
+
+  if(_aiSendCounter < rotN) return currentMsg;
+
+  // Counter reached — generate new message
+  _aiSendCounter = 0;
+  if(statusEl){ statusEl.className='ai-status spin'; statusEl.textContent='✦ Auto-regenerating message…'; }
+
+  var newMsg = await aiGenerate();
+  return newMsg || _aiLastGenerated || currentMsg;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
