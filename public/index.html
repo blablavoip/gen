@@ -480,6 +480,11 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .bs-stop-btn{width:100%;height:36px;background:var(--r-bg);border:1.5px solid rgba(186,26,26,.25);border-radius:var(--radius-sm);color:var(--r);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:5px}
 .bs-stop-btn.show{display:flex}
 .bs-stop-btn:hover{background:rgba(186,26,26,.13)}
+.bs-pause-btn{width:100%;height:36px;background:var(--y-bg);border:1.5px solid rgba(176,106,0,.25);border-radius:var(--radius-sm);color:var(--y);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.bs-pause-btn.show{display:flex}
+.bs-pause-btn:hover{background:rgba(176,106,0,.15)}
+.bs-pause-btn.resumed{background:var(--g-bg);border-color:var(--g-border);color:var(--g)}
+.bs-pause-btn.resumed:hover{background:rgba(0,109,47,.12)}
 .bs-kpi-row{display:flex;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .bs-kpi{flex:1;padding:10px;text-align:center;border-right:1px solid var(--border)}
 .bs-kpi:last-child{border-right:none}
@@ -1030,6 +1035,10 @@ body.dark .ac-qr-wrap{background:var(--s2)}
                 <button class="bs-send-btn" id="bs-send-btn" onclick="bsStart()">
                   <span class="material-symbols-outlined" style="font-size:14px">send</span>
                   Start Sending
+                </button>
+                <button class="bs-pause-btn" id="bs-pause-btn" onclick="bsPauseToggle()">
+                  <span class="material-symbols-outlined" style="font-size:12px" id="bs-pause-icon">pause</span>
+                  <span id="bs-pause-label">Pause</span>
                 </button>
                 <button class="bs-stop-btn" id="bs-stop-btn" onclick="bsStop()">
                   <span class="material-symbols-outlined" style="font-size:12px">stop</span> Stop
@@ -2663,6 +2672,7 @@ updateCount();
 var bsLog        = [];   // full log of all sends
 var bsRunning    = false;
 var bsAbort      = false;
+var bsPaused     = false;  // pause/resume flag
 var bsRrIndex    = 0;    // round-robin account pointer
 var bsSentInBatch = 0;   // counter for batch pause
 var bsSentOnAcct  = 0;   // counter for account rotation
@@ -2831,12 +2841,21 @@ async function bsStart(){
   var rotateN     = parseInt(document.getElementById('bs-rotate-n').value)||10;
 
   // Reset state
-  bsLog=[]; bsAbort=false; bsRunning=true;
+  bsLog=[]; bsAbort=false; bsPaused=false; bsRunning=true;
   bsRrIndex=0; bsSentInBatch=0; bsSentOnAcct=0;
   document.getElementById('bs-log').innerHTML='';
   document.getElementById('bs-empty') && (document.getElementById('bs-empty').style.display='none');
   document.getElementById('bs-send-btn').disabled=true;
   document.getElementById('bs-stop-btn').classList.add('show');
+  document.getElementById('bs-pause-btn').classList.add('show');
+  // Reset pause button to default state
+  var pIcon=document.getElementById('bs-pause-icon');
+  var pLabel=document.getElementById('bs-pause-label');
+  if(pIcon) pIcon.textContent='pause';
+  if(pLabel) pLabel.textContent='Pause';
+  document.getElementById('bs-pause-btn').style.background='';
+  document.getElementById('bs-pause-btn').style.borderColor='';
+  document.getElementById('bs-pause-btn').style.color='';
   document.getElementById('bs-prog-row').classList.add('show');
 
   var kpis={total:numbers.length, sent:0, fail:0, skip:0};
@@ -2846,6 +2865,10 @@ async function bsStart(){
   var startTime=Date.now();
 
   for(var i=0;i<numbers.length;i++){
+    if(bsAbort) break;
+
+    // If paused, wait here until resumed or aborted
+    if(bsPaused) await bsWaitResume();
     if(bsAbort) break;
 
     var num=numbers[i];
@@ -2948,9 +2971,10 @@ async function bsStart(){
     }
   }
 
-  bsRunning=false;
+  bsRunning=false; bsPaused=false;
   document.getElementById('bs-send-btn').disabled=false;
   document.getElementById('bs-stop-btn').classList.remove('show');
+  document.getElementById('bs-pause-btn').classList.remove('show');
   document.getElementById('bs-prog-row').classList.remove('show');
   document.getElementById('bs-k-remain').textContent=0;
   document.getElementById('bs-k-eta').textContent='—';
@@ -2960,14 +2984,69 @@ async function bsStart(){
 }
 
 function bsSleep(ms){
-  return new Promise(function(r){ setTimeout(r,ms); });
+  // Splits sleep into 200ms ticks so bsAbort/bsPaused are checked promptly
+  return new Promise(function(resolve){
+    var remaining = ms;
+    function tick(){
+      if(bsAbort){ resolve(); return; }
+      if(bsPaused){ setTimeout(tick, 200); return; }
+      if(remaining <= 0){ resolve(); return; }
+      var chunk = Math.min(200, remaining);
+      remaining -= chunk;
+      setTimeout(tick, chunk);
+    }
+    tick();
+  });
+}
+
+// Wait until resumed (called at the top of each loop iteration when paused)
+function bsWaitResume(){
+  return new Promise(function(resolve){
+    function check(){ if(!bsPaused || bsAbort){ resolve(); } else { setTimeout(check, 200); } }
+    check();
+  });
+}
+
+function bsPauseToggle(){
+  if(!bsRunning) return;
+  bsPaused = !bsPaused;
+  var btn = document.getElementById('bs-pause-btn');
+  var icon = document.getElementById('bs-pause-icon');
+  var label = document.getElementById('bs-pause-label');
+  if(bsPaused){
+    btn.classList.add('resumed'); // repurpose class to show "resume" state styling
+    btn.classList.remove('resumed');
+    btn.style.background='var(--y-bg)';
+    btn.style.borderColor='rgba(176,106,0,.25)';
+    btn.style.color='var(--y)';
+    if(icon) icon.textContent='play_arrow';
+    if(label) label.textContent='Resume';
+    document.getElementById('bs-prog-txt').textContent='⏸ Paused — click Resume to continue';
+    toast('Paused after current message','warn');
+  } else {
+    btn.style.background='';
+    btn.style.borderColor='';
+    btn.style.color='';
+    if(icon) icon.textContent='pause';
+    if(label) label.textContent='Pause';
+    toast('Resumed','ok');
+  }
 }
 
 function bsStop(){
-  bsAbort=true; bsRunning=false;
+  bsAbort=true; bsRunning=false; bsPaused=false;
   document.getElementById('bs-send-btn').disabled=false;
   document.getElementById('bs-stop-btn').classList.remove('show');
+  document.getElementById('bs-pause-btn').classList.remove('show');
   document.getElementById('bs-prog-row').classList.remove('show');
+  // Reset pause button appearance
+  var icon=document.getElementById('bs-pause-icon');
+  var label=document.getElementById('bs-pause-label');
+  if(icon) icon.textContent='pause';
+  if(label) label.textContent='Pause';
+  document.getElementById('bs-pause-btn').style.background='';
+  document.getElementById('bs-pause-btn').style.borderColor='';
+  document.getElementById('bs-pause-btn').style.color='';
   toast('Stopped','warn');
 }
 

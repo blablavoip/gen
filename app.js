@@ -257,6 +257,7 @@ async function doCreateAccount(id) {
   client.on('ready', async () => {
     if (!guard()) return;
     acc.state = 'ready'; acc.qr = null; acc.loadingPct = null;
+    acc._reconnectAttempts = 0; // reset backoff on clean connect
 
     // Grab profile info — all wrapped so any failure doesn't block 'ready'
     try { acc.profileName = client.info?.pushname || client.info?.me?.user || null; } catch {}
@@ -301,13 +302,55 @@ async function doCreateAccount(id) {
     console.log(`[Account ${id}] Disconnected: ${reason}`);
     acc.state = 'disconnected'; acc.loadingPct = null; acc.dead = true;
     broadcast();
-    io.emit('toast', { msg: `Account ${id} disconnected`, type: 'err' });
-    if (reason === 'LOGOUT') deleteSession(id);
-    // Destroy the browser in background — don't block the event loop
+    io.emit('toast', { msg: `Account ${id} disconnected — reconnecting…`, type: 'warn' });
+
     const c = acc.client; acc.client = null;
     setTimeout(() => safeDestroy(c), 500);
     try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+
+    if (reason === 'LOGOUT') {
+      // User explicitly logged out — delete session, don't reconnect
+      deleteSession(id);
+      io.emit('toast', { msg: `Account ${id} logged out`, type: 'err' });
+      return;
+    }
+
+    // Auto-reconnect with exponential backoff (max 3 attempts)
+    acc._reconnectAttempts = (acc._reconnectAttempts || 0) + 1;
+    if (acc._reconnectAttempts > 3) {
+      acc.state = 'error';
+      io.emit('toast', { msg: `Account ${id} failed to reconnect after 3 attempts`, type: 'err' });
+      broadcast();
+      return;
+    }
+    const backoff = Math.min(5000 * acc._reconnectAttempts, 15000);
+    console.log(`[Account ${id}] Auto-reconnect attempt ${acc._reconnectAttempts} in ${backoff}ms…`);
+    accounts.delete(id);
+    setTimeout(() => enqueueCreate(id), backoff);
   });
+
+  // Keep-alive: ping WhatsApp every 45s to detect stale connections before they silently drop
+  const keepAliveInterval = setInterval(async () => {
+    if (!guard() || acc.state !== 'ready') { clearInterval(keepAliveInterval); return; }
+    try {
+      await Promise.race([
+        client.pupPage.evaluate(() => window.WWebJS ? true : false),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('ping timeout')), 8000)),
+      ]);
+      acc._reconnectAttempts = 0; // reset backoff counter on successful ping
+    } catch (e) {
+      console.warn(`[Account ${id}] Keep-alive ping failed: ${e.message} — triggering reconnect`);
+      clearInterval(keepAliveInterval);
+      if (guard()) {
+        acc.state = 'disconnected'; acc.dead = true; broadcast();
+        const c2 = acc.client; acc.client = null;
+        setTimeout(() => safeDestroy(c2), 200);
+        try { fs.rmSync(`/tmp/chrome-wa-${id}`, { recursive: true, force: true }); } catch {}
+        accounts.delete(id);
+        setTimeout(() => enqueueCreate(id), 3000);
+      }
+    }
+  }, 45000);
 
   // Init — catch "Target closed" and other puppeteer errors gracefully
   client.initialize().catch(async (err) => {
