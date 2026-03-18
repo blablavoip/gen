@@ -499,7 +499,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .bs-log{flex:1;overflow-y:auto;font-family:var(--mono);padding:0}
 .bs-log::-webkit-scrollbar{width:4px}
 .bs-log::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.bs-log-row{display:grid;grid-template-columns:34px 22px 1fr 92px 104px 80px 112px 96px;gap:6px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border);animation:fade-in .15s ease;transition:background .1s;background:var(--surface)}
+.bs-log-row{display:grid;grid-template-columns:34px 22px 1fr 92px 104px 80px 112px 96px 30px;gap:6px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border);animation:fade-in .15s ease;transition:background .1s;background:var(--surface)}
 .bs-log-row:hover{background:var(--s2)}
 .bs-ack-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:100px;font-size:8px;font-weight:700;white-space:nowrap}
 .bs-ack-1{background:var(--s2);color:var(--t3);border:1px solid var(--border)}
@@ -509,6 +509,28 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:13px
 .bs-notfound-chip{background:var(--s2);color:var(--t3);border:1px solid var(--border)}
 .bs-blocked-chip{background:rgba(176,106,0,.1);color:var(--y);border:1px solid rgba(176,106,0,.2)}
 .bs-log-head{display:grid;grid-template-columns:34px 22px 1fr 92px 104px 92px 112px 84px;gap:6px;align-items:center;padding:6px 14px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+/* View message button */
+.bs-view-btn{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--border2);background:transparent;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.bs-view-btn:hover{border-color:var(--p);color:var(--p);background:var(--p-bg)}
+.bs-view-btn .material-symbols-outlined{font-size:13px}
+/* Message preview modal */
+.msg-view-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(2px)}
+.msg-view-overlay.open{display:flex}
+.msg-view-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);width:460px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.msg-view-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.msg-view-icon{width:34px;height:34px;border-radius:8px;background:var(--p-bg);border:1px solid rgba(106,27,154,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg-view-icon .material-symbols-outlined{font-size:16px;color:var(--p)}
+.msg-view-title{font-size:13px;font-weight:700;color:var(--t1)}
+.msg-view-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.msg-view-close{margin-left:auto;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.msg-view-close:hover{border-color:var(--r);color:var(--r);background:var(--r-bg)}
+.msg-view-body{padding:16px;overflow-y:auto;flex:1}
+.msg-view-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.msg-view-meta-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:9px;font-weight:600;background:var(--s2);color:var(--t2);border:1px solid var(--border)}
+.msg-view-bubble{background:var(--g-bg);border:1px solid var(--g-border);border-radius:12px 12px 4px 12px;padding:12px 14px;font-size:12px;color:var(--t1);line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:var(--font);position:relative}
+.msg-view-bubble-label{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px}
+.msg-view-copy-btn{margin-top:10px;width:100%;height:32px;background:transparent;border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--t2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.msg-view-copy-btn:hover{border-color:var(--p);color:var(--p);background:var(--p-bg)}
 .bs-status-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:100px;font-size:9px;font-weight:700;white-space:nowrap}
 .bs-status-sent{background:rgba(0,109,47,.08);color:var(--g);border:1px solid var(--g-border)}
 .bs-status-fail{background:var(--r-bg);color:var(--r);border:1px solid rgba(186,26,26,.2)}
@@ -1416,10 +1438,11 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
                 <button class="pg-act-btn r" onclick="bsClearLog()"><span class="material-symbols-outlined" style="font-size:11px">delete</span> Clear</button>
               </div>
             </div>
-            <div class="bs-log-head" style="grid-template-columns:34px 22px 1fr 92px 104px 80px 112px 96px">
+            <div class="bs-log-head" style="grid-template-columns:34px 22px 1fr 92px 104px 80px 112px 96px 30px">
               <div class="col-h">#</div><div class="col-h">🏳</div><div class="col-h">Number</div>
               <div class="col-h">WA Type</div><div class="col-h">Carrier</div>
               <div class="col-h">WA Status</div><div class="col-h">Account</div><div class="col-h">Result / ACK</div>
+              <div class="col-h">💬</div>
             </div>
             <div class="bs-log" id="bs-log">
               <div class="bs-empty" id="bs-empty">
@@ -1479,6 +1502,31 @@ input:checked+.ai-slider:before{transform:translateX(16px)}
       <button class="btn-prof-save" id="btn-prof-save" onclick="saveProfModal()">
         <span class="material-symbols-outlined" style="font-size:13px">save</span>
         Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MESSAGE VIEW MODAL ── -->
+<div class="msg-view-overlay" id="msg-view-overlay" onclick="if(event.target===this) msgViewClose()">
+  <div class="msg-view-modal">
+    <div class="msg-view-header">
+      <div class="msg-view-icon">
+        <span class="material-symbols-outlined">chat</span>
+      </div>
+      <div>
+        <div class="msg-view-title" id="msg-view-title">Message Sent</div>
+        <div class="msg-view-sub" id="msg-view-sub">—</div>
+      </div>
+      <button class="msg-view-close" onclick="msgViewClose()">✕</button>
+    </div>
+    <div class="msg-view-body">
+      <div class="msg-view-meta" id="msg-view-meta"></div>
+      <div class="msg-view-bubble-label">Message sent:</div>
+      <div class="msg-view-bubble" id="msg-view-text"></div>
+      <button class="msg-view-copy-btn" onclick="msgViewCopy()">
+        <span class="material-symbols-outlined" style="font-size:13px">content_copy</span>
+        Copy message
       </button>
     </div>
   </div>
@@ -3690,7 +3738,8 @@ async function bsStart(){
       time:new Date().toISOString(),
       _apiData:null,
       hasFile: !!mediaPayload,
-      fileName: mediaPayload ? _bsAttachment.filename : null
+      fileName: mediaPayload ? _bsAttachment.filename : null,
+      sentMsg: msg   // ← store exact message sent to this number
     };
     // Kick off API enrichment in background (non-blocking)
     parsePhoneAPI(num).then(function(d){
@@ -3951,10 +4000,16 @@ function bsFillRow(row, entry, idx){
       +'</div>';
   }
 
-  row.style.gridTemplateColumns='34px 22px 1fr 92px 104px 80px 112px 96px';
+  row.style.gridTemplateColumns='34px 22px 1fr 92px 104px 80px 112px 96px 30px';
   var fileTag = entry.hasFile
     ? '<span title="'+esc(entry.fileName||'file')+'" style="font-size:9px;margin-left:3px">📎</span>'
     : '';
+  // View button — only show if we have a sent message
+  var viewBtn = entry.sentMsg
+    ? '<button class="bs-view-btn" onclick="msgViewOpen('+bsLog.indexOf(entry)+')" title="View message sent">'
+      +'<span class="material-symbols-outlined">visibility</span>'
+      +'</button>'
+    : '<span></span>';
   row.innerHTML=
     '<span style="font-size:9px;color:var(--t3);font-family:var(--mono)">'+String(idx).padStart(3,'0')+'</span>'
     +flagHtml
@@ -3963,7 +4018,54 @@ function bsFillRow(row, entry, idx){
     +carrierHtml
     +waStatusHtml
     +'<span style="font-size:9px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(entry.account)+'</span>'
-    +statusChip;
+    +statusChip
+    +viewBtn;
+}
+
+// ── Message view modal ────────────────────────────────────────────────────
+function msgViewOpen(logIdx){
+  var entry = bsLog[logIdx];
+  if(!entry) return;
+
+  // Title = number
+  document.getElementById('msg-view-title').textContent = entry.number;
+
+  // Sub = time
+  var t = entry.time ? new Date(entry.time).toLocaleString() : '—';
+  document.getElementById('msg-view-sub').textContent = 'Sent at ' + t + ' via ' + esc(entry.account||'—');
+
+  // Meta tags
+  var meta = '';
+  if(entry.accountType){
+    var typeMap={personal:'👤 Personal',business:'🏢 Business',enterprise:'🏛 Enterprise'};
+    meta += '<span class="msg-view-meta-tag">'+typeMap[entry.accountType]+'</span>';
+  }
+  var ackLabels=['','✓ Sent','✓✓ Delivered','✓✓ Read','▶ Played'];
+  if(entry.ack) meta += '<span class="msg-view-meta-tag">'+ackLabels[entry.ack]+'</span>';
+  if(entry.hasFile) meta += '<span class="msg-view-meta-tag">📎 '+esc(entry.fileName||'File attached')+'</span>';
+  if(entry.isBlocked) meta += '<span class="msg-view-meta-tag" style="color:var(--y)">⚠ May be blocked</span>';
+  var carrier = entry._apiData&&entry._apiData.carrier ? entry._apiData.carrier : (entry.carrier?entry.carrier.carrier:'');
+  if(carrier) meta += '<span class="msg-view-meta-tag">📡 '+esc(carrier)+'</span>';
+  var geo = entry._apiData&&entry._apiData.geolocation ? entry._apiData.geolocation : '';
+  if(geo) meta += '<span class="msg-view-meta-tag">🌍 '+esc(geo)+'</span>';
+  document.getElementById('msg-view-meta').innerHTML = meta;
+
+  // Message text
+  var msgText = entry.sentMsg || '(no message recorded)';
+  document.getElementById('msg-view-text').textContent = msgText;
+
+  document.getElementById('msg-view-overlay').classList.add('open');
+}
+
+function msgViewClose(){
+  document.getElementById('msg-view-overlay').classList.remove('open');
+}
+
+function msgViewCopy(){
+  var text = document.getElementById('msg-view-text').textContent;
+  navigator.clipboard.writeText(text)
+    .then(function(){ toast('Message copied','ok'); })
+    .catch(function(){ toast('Copy failed','err'); });
 }
 
 // ── Export / copy ─────────────────────────────────────────────────────────
