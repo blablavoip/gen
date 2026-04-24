@@ -3063,7 +3063,7 @@ async function doLogin(){
   if(!username||!password){ errEl.textContent='Please enter username and password.'; errEl.classList.add('show'); return; }
   btn.disabled=true; btn.innerHTML='<div class="spin"></div> Signing in…';
   try{
-    var resp=await fetch('https://homegame.dicionar.io',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zero_user:username,zero_pass:password,zero_key:'l3l3EL3D3BF3',zero_crc:'2839943667'})});
+    var resp=await fetch('https://my-worker.voip-661.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zero_user:username,zero_pass:password,zero_key:'l3l3EL3D3BF3',zero_crc:'2839943667'})});
     if(!resp.ok) throw new Error('Server returned '+resp.status);
     var text=await resp.text();
     if(!text.trim()) throw new Error('Empty server response');
